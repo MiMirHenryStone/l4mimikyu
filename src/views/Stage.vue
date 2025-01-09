@@ -192,7 +192,7 @@ const jewelryCountTargetMax = ref(20);
 const cardTimes = ref(360);
 const skipTimes = ref(36);
 
-const sp = ref("");
+const sp = ref("mg2");
 const effects = ref({});
 
 const cards = cardList.map((i) => new Card(i.short));
@@ -201,21 +201,21 @@ const deck = ref(
   cardList
     .filter((i) => typeof i.member == "number")
     .map((i) => new Card(i.short))
-    .slice(0, 16)
+    .slice(0, 14)
 );
 
-const stage = ref(new Stage([]));
+const stage = ref();
+const newStage = () => {
+  stage.value = new Stage([]);
+  stage.value.sp = sp.value;
+  stage.value.effects = effects.value;
+};
+newStage();
 
 const retire = () => {
   ing.value = false;
   autoResults.value = {};
   newStage();
-};
-
-const newStage = () => {
-  stage.value = new Stage([]);
-  stage.value.sp = sp.value;
-  stage.value.effects = effects.value;
 };
 
 const start = async (a) => {

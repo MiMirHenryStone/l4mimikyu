@@ -118,22 +118,6 @@ export const cardList = [
     skill: { mental: 1, voltage: 1 },
   },
   {
-    short: "pa吟",
-    member: 7,
-    cost: 4,
-    main: "dress",
-    skill(stage) {
-      for (let i = 0; i < 2; i++) stage.yama.push(new Card("pa吟👗"));
-    },
-  },
-  {
-    short: "pa吟👗",
-    member: "dress",
-    cost: 2,
-    main: "ap",
-    once: true,
-  },
-  {
     short: "lttf铃",
     member: 8,
     cost: 9,
@@ -277,26 +261,12 @@ export const cardList = [
     draw: { heart: 1 },
   },
   {
-    short: "kol缀",
-    member: 4,
-    cost: 3,
-    main: "voltage",
-    skill: { voltage: 1, heart: 1 },
-    draw(stage) {
-      stage.getAllCards().forEach((c) => {
-        if (c.member == 3 || c.member == 6) c.cost -= 3;
-      });
-    },
-    cross(stage, card) {
-      if (card.member == 6) stage.trigger({ voltage: 1, heart: 1 });
-    },
-  },
-  {
-    short: "hsct慈",
+    short: "银河慈",
     member: 6,
-    cost: 4,
+    cost: 5,
     main: "reshuffle",
     reshuffle: true,
+    skill: { mental: 2, protect: 1 },
   },
   {
     short: "kol慈",
@@ -330,6 +300,44 @@ export const cardList = [
     draw: { heart: 1, voltage: 1, protect: 1 },
   },
   {
+    short: "pa吟",
+    member: 7,
+    cost: 4,
+    main: "dress",
+    skill(stage) {
+      for (let i = 0; i < 2; i++) stage.yama.push(new Card("pa吟👗"));
+    },
+  },
+  {
+    short: "pa吟👗",
+    member: "dress",
+    cost: 2,
+    main: "ap",
+    once: true,
+  },
+  {
+    short: "kol缀",
+    member: 4,
+    cost: 3,
+    main: "voltage",
+    skill: { voltage: 1, heart: 1 },
+    draw(stage) {
+      stage.getAllCards().forEach((c) => {
+        if (c.member == 3 || c.member == 6) c.cost -= 3;
+      });
+    },
+    cross(stage, card) {
+      if (card.member == 6) stage.trigger({ voltage: 1, heart: 1 });
+    },
+  },
+  {
+    short: "hsct慈",
+    member: 6,
+    cost: 4,
+    main: "reshuffle",
+    reshuffle: true,
+  },
+  {
     short: "舞会缀",
     member: 4,
     cost: 2,
@@ -341,13 +349,5 @@ export const cardList = [
     member: 2,
     cost: 2,
     main: "love+",
-  },
-  {
-    short: "银河慈",
-    member: 6,
-    cost: 5,
-    main: "reshuffle",
-    reshuffle: true,
-    skill: { mental: 2, protect: 1 },
   },
 ];
