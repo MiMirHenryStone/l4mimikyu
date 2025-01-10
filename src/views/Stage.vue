@@ -28,15 +28,6 @@
       <h2>STAGE</h2>
       <hr />
       <div>
-        <label for="jewelry">JEWELRY: </label>
-        <input
-          v-model="jewelryCountTargetMax"
-          :disabled="ing"
-          type="number"
-          id="jewelry"
-        />
-      </div>
-      <div>
         <label for="sp">SP: </label>
         <select v-model="sp" :disabled="ing" id="sp">
           <option value="">--</option>
@@ -70,6 +61,15 @@
         </label>
       </div>
       <div>
+        <label for="jewelry">MAX TARGET JEWELRY: </label>
+        <input
+          v-model="jewelryCountTargetMax"
+          :disabled="ing"
+          type="number"
+          id="jewelry"
+        />
+      </div>
+      <div>
         <label for="card-time">CARD回数: </label>
         <input
           v-model="cardTimes"
@@ -101,8 +101,8 @@
       <template v-if="auto">
         <table style="width: 100%">
           <tr>
-            <td>target jewelry</td>
-            <td>actual jewelry</td>
+            <td>target<br />jewelry</td>
+            <td>actual<br />jewelry</td>
             <td>score</td>
             <td>percent</td>
           </tr>
@@ -192,7 +192,7 @@ const jewelryCountTargetMax = ref(20);
 const cardTimes = ref(360);
 const skipTimes = ref(36);
 
-const sp = ref("mg2");
+const sp = ref("");
 const effects = ref({});
 
 const cards = cardList.map((i) => new Card(i.short));
@@ -201,7 +201,7 @@ const deck = ref(
   cardList
     .filter((i) => typeof i.member == "number")
     .map((i) => new Card(i.short))
-    .slice(0, 14)
+    .slice(0, 16)
 );
 
 const stage = ref();

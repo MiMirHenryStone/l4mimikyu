@@ -82,6 +82,22 @@ export default class Card {
   onCross(stage, card) {
     if (this.props?.cross) this.props.cross(stage, card, this);
   }
+
+  matchAttrs(dict) {
+    return Object.keys(dict).every((key) =>
+      dict[key] == undefined ? true : dict[key] == this[key]
+    );
+  }
+
+  calcSubtractAp(t) {
+    let sa = 0;
+    if (t?.length) {
+      for (let i of t) {
+        if (this.matchAttrs({ ...i, cost: undefined })) sa += i.cost;
+      }
+    }
+    return sa;
+  }
 }
 
 export const schoolIdol = [
@@ -116,6 +132,22 @@ export const cardList = [
     reshuffle: true,
     once: true,
     skill: { mental: 1, voltage: 1 },
+  },
+  {
+    short: "pa吟",
+    member: 7,
+    cost: 4,
+    main: "dress",
+    skill(stage) {
+      for (let i = 0; i < 2; i++) stage.yama.push(new Card("pa吟👗"));
+    },
+  },
+  {
+    short: "pa吟👗",
+    member: "dress",
+    cost: 2,
+    main: "ap",
+    once: true,
   },
   {
     short: "lttf铃",
@@ -243,11 +275,7 @@ export const cardList = [
     cost: 9,
     main: "mental",
     skill: { mental: 1, heart: 1 },
-    draw(stage) {
-      stage.getAllCards().forEach((c) => {
-        if (c.member == 6) c.cost -= 9;
-      });
-    },
+    draw: { "ap-": [{ member: 6, cost: -9 }] },
     cross(stage, card) {
       if (card.member == 6) stage.trigger({ protect: 1, heart: 1 });
     },
@@ -261,12 +289,27 @@ export const cardList = [
     draw: { heart: 1 },
   },
   {
-    short: "银河慈",
+    short: "kol缀",
+    member: 4,
+    cost: 3,
+    main: "voltage",
+    skill: { voltage: 1, heart: 1 },
+    draw: {
+      "ap-": [
+        { member: 3, cost: -3 },
+        { member: 6, cost: -3 },
+      ],
+    },
+    cross(stage, card) {
+      if (card.member == 6) stage.trigger({ voltage: 1, heart: 1 });
+    },
+  },
+  {
+    short: "hsct慈",
     member: 6,
-    cost: 5,
+    cost: 4,
     main: "reshuffle",
     reshuffle: true,
-    skill: { mental: 2, protect: 1 },
   },
   {
     short: "kol慈",
@@ -300,44 +343,6 @@ export const cardList = [
     draw: { heart: 1, voltage: 1, protect: 1 },
   },
   {
-    short: "pa吟",
-    member: 7,
-    cost: 4,
-    main: "dress",
-    skill(stage) {
-      for (let i = 0; i < 2; i++) stage.yama.push(new Card("pa吟👗"));
-    },
-  },
-  {
-    short: "pa吟👗",
-    member: "dress",
-    cost: 2,
-    main: "ap",
-    once: true,
-  },
-  {
-    short: "kol缀",
-    member: 4,
-    cost: 3,
-    main: "voltage",
-    skill: { voltage: 1, heart: 1 },
-    draw(stage) {
-      stage.getAllCards().forEach((c) => {
-        if (c.member == 3 || c.member == 6) c.cost -= 3;
-      });
-    },
-    cross(stage, card) {
-      if (card.member == 6) stage.trigger({ voltage: 1, heart: 1 });
-    },
-  },
-  {
-    short: "hsct慈",
-    member: 6,
-    cost: 4,
-    main: "reshuffle",
-    reshuffle: true,
-  },
-  {
     short: "舞会缀",
     member: 4,
     cost: 2,
@@ -349,5 +354,13 @@ export const cardList = [
     member: 2,
     cost: 2,
     main: "love+",
+  },
+  {
+    short: "银河慈",
+    member: 6,
+    cost: 5,
+    main: "reshuffle",
+    reshuffle: true,
+    skill: { mental: 2, protect: 1 },
   },
 ];

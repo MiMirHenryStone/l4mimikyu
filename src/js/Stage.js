@@ -46,9 +46,7 @@ export default class Stage {
 
     let yama;
     if (drawFilter) {
-      yama = this.yama.filter((i) =>
-        Object.keys(drawFilter).map((key) => i[key] == drawFilter[key])
-      );
+      yama = this.yama.filter((i) => i.matchAttrs(drawFilter));
       if (!yama.length) yama = this.yama;
     } else yama = this.yama;
 
@@ -136,6 +134,7 @@ export default class Stage {
     this.addVoltage(s.voltage);
     this.addMental(s.mental);
     this.addProtect(s.protect);
+    this.subtractAp(s["ap-"]);
   }
 
   addHeart(t) {
@@ -156,6 +155,13 @@ export default class Stage {
   addProtect(t) {
     if (t) {
       if (this.sp == "mg2") this.score += t;
+    }
+  }
+  subtractAp(t) {
+    if (t?.length) {
+      for (let c of this.getAllCards()) {
+        c.cost += c.calcSubtractAp(t);
+      }
     }
   }
 }

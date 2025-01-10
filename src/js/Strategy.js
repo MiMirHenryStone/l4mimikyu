@@ -15,6 +15,19 @@ function costFilter(stage, indexList) {
   let min = Math.min(...costList);
   return indexList.filter((index, i) => costList[i] == min);
 }
+function costSubtractFilter(stage, indexList) {
+  let csList = indexList.map((index) => {
+    let card = stage.te[index];
+    let sa = 0;
+    stage.getAllCards().forEach((c) => {
+      if (c.props?.draw?.["ap-"])
+        sa += card.calcSubtractAp(c.props?.draw?.["ap-"]);
+    });
+    return sa;
+  });
+  let min = Math.min(...csList);
+  return indexList.filter((index, i) => csList[i] == min);
+}
 // lttf
 function drawFilterSingleFilter(stage, indexList) {
   let yama = stage.getDrawYama();
@@ -24,7 +37,7 @@ function drawFilterSingleFilter(stage, indexList) {
     if (card.props?.drawFilters) {
       let drawFilter = card.props?.drawFilters[0];
       results = yama.filter((c) =>
-        Object.keys(drawFilter).map((key) => c[key] == drawFilter[key])
+        Object.keys(drawFilter).every((key) => c[key] == drawFilter[key])
       );
       if (!results.length) results = yama;
     }
@@ -138,17 +151,20 @@ export function strategyPlay(stage, jewelryCountTarget = 9, first = "score") {
         stage.te[i].isReshuffle(stage)
       );
       if (first == "cost")
-        res = drawFilterReshuffleFilter(
+        res = costSubtractFilter(
           stage,
-          ignitionReshuffleFilter(
+          drawFilterReshuffleFilter(
             stage,
-            scoreFilter(
+            ignitionReshuffleFilter(
               stage,
-              costFilter(
+              scoreFilter(
                 stage,
-                addDressFilter(
+                costFilter(
                   stage,
-                  dressFilter(stage, yamaReshuffleFilter(stage, indexList))
+                  addDressFilter(
+                    stage,
+                    dressFilter(stage, yamaReshuffleFilter(stage, indexList))
+                  )
                 )
               )
             )
@@ -169,15 +185,18 @@ export function strategyPlay(stage, jewelryCountTarget = 9, first = "score") {
           )
         )[0];
     } else if (first == "cost") {
-      res = scoreFilter(
+      res = costSubtractFilter(
         stage,
-        costFilter(
+        scoreFilter(
           stage,
-          drawFilterSingleFilter(
+          costFilter(
             stage,
-            jewelryFilter(
+            drawFilterSingleFilter(
               stage,
-              addDressFilter(stage, dressFilter(stage, newIndexList(stage)))
+              jewelryFilter(
+                stage,
+                addDressFilter(stage, dressFilter(stage, newIndexList(stage)))
+              )
             )
           )
         )
