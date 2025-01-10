@@ -4,6 +4,8 @@ export default class Stage {
     this.te = [];
     this.sute = [];
     this.yama = cards;
+    this.mental = true;
+    this.protect = false;
     this.ignition = false;
     this.timesDict = { kol慈: 0, "💎": 0 };
 
@@ -90,6 +92,8 @@ export default class Stage {
 
     if (card.props?.once) {
       // delete card;
+    } else if (card.props?.yamaUse) {
+      this.yama.push(card);
     } else {
       this.sute.push(card);
     }
@@ -104,29 +108,25 @@ export default class Stage {
       this.sute.push(...this.te.splice(0));
       for (let i = 0; i < this.teMax; i++) this.draw(i);
     }
+
+    if (!this.protect && this.sp != "mg2") this.mental = false;
   }
 
   testCard(index) {
     let testStage = new Stage([]);
     for (let c of this.te) testStage.te.push(c.copy());
+    testStage.mental = this.mental;
+    testStage.protect = this.protect;
     testStage.ignition = this.ignition;
     testStage.timesDict = this.timesDict;
     testStage.sp = this.sp;
 
     let card = testStage.te[index];
-    let isReshuffle = card.isReshuffle(this);
+
     card.onSkill(testStage);
     for (let c of testStage.te) {
       c.onCross(testStage, card);
     }
-
-    if (card.props?.once) {
-      // delete card;
-    } else {
-      testStage.sute.push(card);
-    }
-
-    card.cost = card.props.cost;
 
     return testStage.score;
   }
@@ -151,12 +151,16 @@ export default class Stage {
   }
   addMental(t) {
     if (t) {
-      if (this.sp == "mg2") this.score += t;
+      if (t > 0 && this.sp == "mg2") this.score += t;
+
+      if (t > 0) this.mental = true;
+      else if (t < 0 && this.sp != "mg2") this.mental = false;
     }
   }
   addProtect(t) {
     if (t) {
       if (this.sp == "mg2") this.score += t;
+      this.protect = true;
     }
   }
   subtractAp(t) {

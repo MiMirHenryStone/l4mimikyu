@@ -60,6 +60,7 @@ const cardColorDict = {
   voltage: "rgb(174,141,24)",
   mental: "rgb(48,124,24)",
   reshuffle: "rgb(134,82,195)",
+  teMax: "rgb(134,82,195)",
   protect: "rgb(48,124,24)",
   dress: "rgb(134,82,195)",
   ap: "rgb(174,141,24)",

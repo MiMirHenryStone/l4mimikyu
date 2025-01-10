@@ -62,6 +62,14 @@ function yamaReshuffleFilter(stage, indexList) {
   if (newList.length) return newList;
   else return indexList;
 }
+// mental
+function mentalFilter(stage, indexList) {
+  let newList = indexList.filter(
+    (index) => !(stage.te[index].props?.skill?.mental < 0)
+  );
+  if (newList.length) return newList;
+  else return indexList;
+}
 // dress
 function dressFilter(stage, indexList) {
   let newList = indexList.filter((index) => stage.te[index].member == "dress");
@@ -161,9 +169,12 @@ export function strategyPlay(stage, jewelryCountTarget = 9, first = "score") {
                 stage,
                 costFilter(
                   stage,
-                  addDressFilter(
+                  mentalFilter(
                     stage,
-                    dressFilter(stage, yamaReshuffleFilter(stage, indexList))
+                    addDressFilter(
+                      stage,
+                      dressFilter(stage, yamaReshuffleFilter(stage, indexList))
+                    )
                   )
                 )
               )
@@ -193,9 +204,12 @@ export function strategyPlay(stage, jewelryCountTarget = 9, first = "score") {
             stage,
             drawFilterSingleFilter(
               stage,
-              jewelryFilter(
+              mentalFilter(
                 stage,
-                addDressFilter(stage, dressFilter(stage, newIndexList(stage)))
+                jewelryFilter(
+                  stage,
+                  addDressFilter(stage, dressFilter(stage, newIndexList(stage)))
+                )
               )
             )
           )
