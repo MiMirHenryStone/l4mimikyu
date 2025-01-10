@@ -103,12 +103,16 @@
           <tr>
             <td>target<br />jewelry</td>
             <td>actual<br />jewelry</td>
+            <td>kol慈<br />回数</td>
+            <td>jewelry<br />回数</td>
             <td>score</td>
             <td>percent</td>
           </tr>
           <tr v-for="(item, key) in autoResults" :key="key">
             <td>{{ key }}</td>
             <td>{{ item.jewelryCount }}</td>
+            <td>{{ item.kt }}</td>
+            <td>{{ item.jt }}</td>
             <td>{{ item.score }}</td>
             <td>
               {{
@@ -228,6 +232,8 @@ const start = async (a) => {
       autoResults.value[j] = { list: [] };
       let score = 0;
       let jewelryCount = 0;
+      let kt = 0;
+      let jt = 0;
       for (let s = 0; s < Number(skipTimes.value); s++) {
         newStage();
         stage.value.yama = deck.value.map((i) => new Card(i.short));
@@ -247,16 +253,15 @@ const start = async (a) => {
         jewelryCount += stage.value
           .getAllCards()
           .filter((i) => i.member == "jewelry")?.length;
-        // autoResults.value[j].list.push({
-        //   score: stage.value.score,
-        //   jewelryCount: stage.value.getAllCards().filter((i) => i.member == "jewelry")
-        //     ?.length,
-        // });
+        kt += stage.value.timesDict.kol慈;
+        jt += stage.value.timesDict["💎"];
       }
       autoResults.value[j].score = Number((score / skipTimes.value).toFixed(2));
       autoResults.value[j].jewelryCount = Number(
         (jewelryCount / skipTimes.value).toFixed(2)
       );
+      autoResults.value[j].kt = Number((kt / skipTimes.value).toFixed(2));
+      autoResults.value[j].jt = Number((jt / skipTimes.value).toFixed(2));
       if (!ing.value) break;
     }
   } else {

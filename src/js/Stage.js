@@ -5,7 +5,7 @@ export default class Stage {
     this.sute = [];
     this.yama = cards;
     this.ignition = false;
-    this.timesDict = {};
+    this.timesDict = { kol慈: 0, "💎": 0 };
 
     this.timesCount = 0;
 
@@ -63,6 +63,8 @@ export default class Stage {
 
   useCard(index) {
     let card = this.te[index];
+    if (card.short == "kol慈" || card.short == "💎")
+      this.timesDict[card.short]++;
     let isReshuffle = card.isReshuffle(this);
     card.onSkill(this);
     for (let c of this.te) {
