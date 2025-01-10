@@ -101,12 +101,12 @@
       <template v-if="auto">
         <table style="width: 100%">
           <tr>
-            <td>target<br />jewelry</td>
-            <td>actual<br />jewelry</td>
+            <td>target<br />💎</td>
+            <td>actual<br />💎</td>
             <td>kol慈<br />回数</td>
-            <td>jewelry<br />回数</td>
-            <td>score</td>
-            <td>percent</td>
+            <td>💎<br />回数</td>
+            <td>pt</td>
+            <td>%</td>
           </tr>
           <tr v-for="(item, key) in autoResults" :key="key">
             <td>{{ key }}</td>
@@ -292,11 +292,12 @@ const refreshOsusume = () => {
 }
 table {
   border-spacing: 0;
+  font-size: small;
   tr:nth-child(2n) {
     background: #aaaaaa55;
   }
   td {
-    padding: 2px;
+    padding: 0.25em;
   }
 }
 h2 {
