@@ -106,6 +106,13 @@
           type="number"
           id="jewelry"
         />
+        /
+        <input
+          v-model="jewelryCountTarget"
+          type="number"
+          id="jewelry"
+          @change="if (ing && !auto) refreshOsusume();"
+        />
       </div>
       <div>
         <label for="card-time">CARD回数: </label>
@@ -228,7 +235,7 @@
           </tr>
           <tr>
             <td>target<br />💎</td>
-            <td>actual<br />💎</td>
+            <!-- <td>actual<br />💎</td> -->
             <td>kol慈<br />回数</td>
             <td>💎<br />回数</td>
             <td>AP SKIP<br />回数</td>
@@ -239,7 +246,7 @@
         <tbody>
           <tr v-for="(item, key) in autoResult.dict">
             <td>{{ key }}</td>
-            <td>{{ item.jewelryCount }}</td>
+            <!-- <td>{{ item.jewelryCount }}</td> -->
             <td>{{ item.kt }}</td>
             <td>{{ item.jt }}</td>
             <td>{{ item.st }}</td>

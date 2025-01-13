@@ -173,14 +173,15 @@ export default class Stage {
     }
 
     return (
-      (testStage.score +
+      ((testStage.score +
         (isReshuffle
           ? (this.drawHeartCount * 8) / this.getAllCards().length
           : 0)) /
-      (1 +
-        (card.props?.skill?.cards?.length
-          ? card.props?.skill?.cards?.length * 8
-          : 0))
+        (1 +
+          (card.props?.skill?.cards?.length
+            ? card.props?.skill?.cards?.length * 8
+            : 0))) *
+      (card.short == "上升姬芽" ? 3 / 4 : 1)
     );
   }
 

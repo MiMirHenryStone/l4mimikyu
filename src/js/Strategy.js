@@ -8,6 +8,7 @@ function newIndexList(stage) {
 function scoreFilter(stage, indexList) {
   let scoreList = indexList.map((index) => stage.testCard(index));
   let max = Math.max(...scoreList);
+  if (max == 0) return drawFilterSingleFilter(stage, indexList);
   return indexList.filter((index, i) => scoreList[i] == max);
 }
 function costFilter(stage, indexList) {
@@ -53,9 +54,9 @@ function drawFilterSingleFilter(stage, indexList) {
     }
     return results.filter((c) => c.isReshuffle(stage)).length / results.length;
   });
-  let standard = yama.filter((c) => c.isReshuffle(stage)).length / yama.length;
+  // let standard = yama.filter((c) => c.isReshuffle(stage)).length / yama.length;
   let max = Math.max(...reshuffleProbabilityList);
-  if (max <= standard) return [];
+  // if (max <= standard) return [];
   return indexList.filter((index, i) => reshuffleProbabilityList[i] == max);
 }
 // 花结
@@ -104,7 +105,11 @@ function ignitionReshuffleFilter(stage, indexList) {
   else return indexList;
 }
 // jewelry
-function jewelryFilter(stage, indexList) {
+function jewelryFilter(stage, jewelryCountTarget, indexList) {
+  let jewelryCount = stage
+    .getAllCards()
+    .filter((i) => i.member == "jewelry").length;
+  if (jewelryCount > jewelryCountTarget) return indexList;
   let newList = indexList.filter(
     (index) => stage.te[index].member != "jewelry"
   );
@@ -112,7 +117,7 @@ function jewelryFilter(stage, indexList) {
   else return indexList;
 }
 
-export function strategyPlay(stage, jewelryCountTarget = 9, first) {
+export function strategyPlay(stage, jewelryCountTarget = 8, first) {
   let res;
   let card, index;
 
@@ -174,22 +179,33 @@ export function strategyPlay(stage, jewelryCountTarget = 9, first) {
     }
   }
   if (res == undefined) {
+    // jewelry over
+    index = stage.te.findIndex(
+      (c) => c.member == "jewelry" && c.getCost(true) == 2
+    );
+    if (
+      index >= 0 &&
+      stage.getAllCards().filter((c) => c.member == "jewelry").length >
+        jewelryCountTarget
+    ) {
+      res = index;
+    }
+  }
+  if (res == undefined) {
     // let hasReshuffle = stage.te.find((i) => i.isReshuffle(stage));
     if (first != "score") {
       res = costSubtractFilter(
         stage,
         drawFilterReshuffleFilter(
           stage,
-          ignitionReshuffleFilter(
+          jewelryFilter(
             stage,
-            jewelryFilter(
+            jewelryCountTarget,
+            addDressFilter(
               stage,
-              addDressFilter(
+              costFilter(
                 stage,
-                costFilter(
-                  stage,
-                  mentalFilter(stage, dressFilter(stage, newIndexList(stage)))
-                )
+                mentalFilter(stage, dressFilter(stage, newIndexList(stage)))
               )
             )
           )
@@ -200,18 +216,10 @@ export function strategyPlay(stage, jewelryCountTarget = 9, first) {
         stage,
         jewelryFilter(
           stage,
+          jewelryCountTarget,
           addDressFilter(
             stage,
-            drawFilterSingleFilter(
-              stage,
-              scoreFilter(
-                stage,
-                ignitionReshuffleFilter(
-                  stage,
-                  dressFilter(stage, newIndexList(stage))
-                )
-              )
-            )
+            scoreFilter(stage, dressFilter(stage, newIndexList(stage)))
           )
         )
       )[0];
