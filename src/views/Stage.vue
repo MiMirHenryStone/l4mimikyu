@@ -137,7 +137,7 @@
         <select v-model="formData.strategy" :disabled="ing" id="strategy">
           <option value="cost">pt/AP优先</option>
           <option value="score">pt优先</option>
-          <option value="exCost">AP优先</option>
+          <!-- <option value="exCost">AP优先</option> -->
         </select>
       </div>
     </form>
