@@ -1,7 +1,7 @@
 function newIndexList(stage) {
   let indexList = [];
   for (let i = 0; i < stage.te.length; i++) {
-    if (stage.te[i].getCost() <= stage.apMax) indexList.push(i);
+    if (stage.te[i].getCost(true) <= stage.ap) indexList.push(i);
   }
   return indexList;
 }
@@ -11,9 +11,19 @@ function scoreFilter(stage, indexList) {
   return indexList.filter((index, i) => scoreList[i] == max);
 }
 function costFilter(stage, indexList) {
-  let costList = indexList.map((index) => stage.te[index].getCost(true));
-  let min = Math.min(...costList);
-  return indexList.filter((index, i) => costList[i] == min);
+  let fullCostScoreList = stage.te.map(
+    (c, index) => stage.testCard(index) / stage.te[index].getCost(true)
+  );
+  let costScoreList = indexList.map((index) => fullCostScoreList[index]);
+  let max = Math.max(...costScoreList);
+  if (max == 0 && Math.max(...fullCostScoreList) > 0) {
+    let min = Math.min(
+      ...indexList.map((index) => stage.te[index].getCost(true))
+    );
+    if (min <= stage.apSpeed)
+      return indexList.filter((index) => stage.te[index].getCost(true) == min);
+    else return drawFilterSingleFilter(stage, indexList);
+  } else return indexList.filter((index, i) => costScoreList[i] == max);
 }
 function costSubtractFilter(stage, indexList) {
   let csList = indexList.map((index) => {
@@ -43,7 +53,9 @@ function drawFilterSingleFilter(stage, indexList) {
     }
     return results.filter((c) => c.isReshuffle(stage)).length / results.length;
   });
+  let standard = yama.filter((c) => c.isReshuffle(stage)).length / yama.length;
   let max = Math.max(...reshuffleProbabilityList);
+  if (max <= standard) return [];
   return indexList.filter((index, i) => reshuffleProbabilityList[i] == max);
 }
 // 花结
@@ -78,7 +90,7 @@ function dressFilter(stage, indexList) {
 }
 function addDressFilter(stage, indexList) {
   let newList = indexList.filter(
-    (index) => stage.te[index].getMain(stage) != "dress"
+    (index) => !stage.te[index].props?.skill?.cards
   );
   if (newList.length) return newList;
   else return indexList;
@@ -100,9 +112,17 @@ function jewelryFilter(stage, indexList) {
   else return indexList;
 }
 
-export function strategyPlay(stage, jewelryCountTarget = 9, first = "score") {
+export function strategyPlay(stage, jewelryCountTarget = 9, first) {
   let res;
   let card, index;
+
+  if (first == undefined) {
+    first =
+      stage.strategy ??
+      (stage.sp == "mg2" || stage.sp == "tz2" || stage.sp == "kz2"
+        ? "score"
+        : "cost");
+  }
 
   // ignition
   if (
@@ -114,7 +134,7 @@ export function strategyPlay(stage, jewelryCountTarget = 9, first = "score") {
         c.short != "上升姬芽"
     )
   ) {
-    if (first == "cost")
+    if (first != "score")
       res = scoreFilter(
         stage,
         costFilter(
@@ -139,76 +159,36 @@ export function strategyPlay(stage, jewelryCountTarget = 9, first = "score") {
           );
         })
       )[0];
-  } else {
+  }
+  if (res == undefined) {
     // jewelry
     index = stage.te.findIndex((c) => c.short == "kol慈");
     if (
       index >= 0 &&
       stage.getAllCards().filter((c) => c.member == "jewelry").length <
         jewelryCountTarget &&
-      stage.te[index].getCost(true) < (first == "score" ? stage.apMax : 10)
+      stage.te[index].getCost(true) <
+        (first == "score" ? stage.ap : stage.ap + stage.apSpeed - 4)
     ) {
       res = index;
     }
-    // reshuffle
-    else if (
-      newIndexList(stage).find((i) => stage.te[i].isReshuffle(stage)) !=
-      undefined
-    ) {
-      let indexList = newIndexList(stage).filter((i) =>
-        stage.te[i].isReshuffle(stage)
-      );
-      if (first == "cost")
-        res = costSubtractFilter(
+  }
+  if (res == undefined) {
+    // let hasReshuffle = stage.te.find((i) => i.isReshuffle(stage));
+    if (first != "score") {
+      res = costSubtractFilter(
+        stage,
+        drawFilterReshuffleFilter(
           stage,
-          drawFilterReshuffleFilter(
+          ignitionReshuffleFilter(
             stage,
-            ignitionReshuffleFilter(
-              stage,
-              scoreFilter(
-                stage,
-                costFilter(
-                  stage,
-                  mentalFilter(
-                    stage,
-                    addDressFilter(
-                      stage,
-                      dressFilter(stage, yamaReshuffleFilter(stage, indexList))
-                    )
-                  )
-                )
-              )
-            )
-          )
-        )[0];
-      else
-        res = drawFilterReshuffleFilter(
-          stage,
-          scoreFilter(
-            stage,
-            ignitionReshuffleFilter(
+            jewelryFilter(
               stage,
               addDressFilter(
                 stage,
-                dressFilter(stage, yamaReshuffleFilter(stage, indexList))
-              )
-            )
-          )
-        )[0];
-    } else if (first == "cost") {
-      res = costSubtractFilter(
-        stage,
-        scoreFilter(
-          stage,
-          costFilter(
-            stage,
-            drawFilterSingleFilter(
-              stage,
-              mentalFilter(
-                stage,
-                jewelryFilter(
+                costFilter(
                   stage,
-                  addDressFilter(stage, dressFilter(stage, newIndexList(stage)))
+                  mentalFilter(stage, dressFilter(stage, newIndexList(stage)))
                 )
               )
             )
@@ -216,18 +196,29 @@ export function strategyPlay(stage, jewelryCountTarget = 9, first = "score") {
         )
       )[0];
     } else {
-      res = scoreFilter(
+      res = drawFilterReshuffleFilter(
         stage,
-        drawFilterSingleFilter(
+        jewelryFilter(
           stage,
-          jewelryFilter(
+          addDressFilter(
             stage,
-            addDressFilter(stage, dressFilter(stage, newIndexList(stage)))
+            drawFilterSingleFilter(
+              stage,
+              scoreFilter(
+                stage,
+                ignitionReshuffleFilter(
+                  stage,
+                  dressFilter(stage, newIndexList(stage))
+                )
+              )
+            )
           )
         )
       )[0];
     }
   }
-  if (res == undefined) debugger;
+  if (newIndexList(stage).length && res == undefined) debugger;
   return res;
 }
+
+window.strategyPlay = strategyPlay;

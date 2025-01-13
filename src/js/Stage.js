@@ -1,3 +1,5 @@
+import Card from "./Card";
+
 export default class Stage {
   constructor(cards) {
     this.score = 0;
@@ -6,16 +8,20 @@ export default class Stage {
     this.yama = cards;
     this.mental = true;
     this.protect = false;
+    this.apMax = 20;
     this.ignition = false;
-    this.timesDict = { kol慈: 0, "💎": 0 };
+    this.timesDict = { kol慈: 0, "💎": 0, apSkip: 0 };
 
     this.timesCount = 0;
 
     this.sp = "";
-    this.effects = {};
+    this.effect = "";
 
     this.teMax = 8;
-    this.apMax = 20;
+    this.ap = 8;
+    this.apSpeed = 2.5;
+
+    this.drawHeartCount = 0;
   }
 
   getAllCards() {
@@ -26,12 +32,30 @@ export default class Stage {
     return this.yama.length ? this.yama : this.sute;
   }
 
+  calcDrawHeartCount() {
+    let n = 0;
+    this.getAllCards().forEach((c) => {
+      let draw;
+      if (c.props?.draw) {
+        if (typeof c.props?.draw == "function") draw = c.props?.draw(this);
+        else draw = c.props?.draw;
+      }
+      n += draw?.heart || 0;
+      if (this.sp == "tz") n += draw?.voltage || 0;
+      if (this.sp == "mg2") n += (draw?.mental || 0) + (draw?.protect || 0);
+    });
+    this.drawHeartCount = n;
+    return n;
+  }
+
   start() {
+    if (this.sp == "kz2") this.ap = Infinity;
     for (let i = 0; i < this.teMax; i++) {
       let index = Math.floor(Math.random() * this.yama.length);
       let card = this.yama.splice(index, 1)[0];
       this.te.push(card);
     }
+    this.calcDrawHeartCount();
   }
 
   draw(index, drawFilter) {
@@ -39,9 +63,9 @@ export default class Stage {
       this.yama = [...this.sute];
       this.sute = [];
 
-      if (this.effects.a) {
+      if (this.effect == "kj1a") {
         this.yama.forEach((c) => {
-          if (c.getMain(this) == "reshuffle") c.cost += 1;
+          if (c.getMain(this) == "reshuffle") c.cost++;
         });
       }
     }
@@ -54,16 +78,23 @@ export default class Stage {
 
     let i = Math.floor(Math.random() * yama.length);
     let card = yama[i];
-    this.yama.splice(
-      this.yama.findIndex((i) => i.short == card.short),
-      1
-    );
+    this.yama.splice(this.yama.indexOf(card), 1);
 
     this.te[index] = card;
     card.onDraw(this);
   }
 
+  autoAp() {
+    if (this.sp != "kz2") this.addAp(this.apSpeed);
+  }
+
   useCard(index) {
+    if (index == undefined) {
+      // console.log("AP SKIP");
+      this.timesDict.apSkip++;
+      this.autoAp();
+      return;
+    }
     let card = this.te[index];
     if (card.short == "kol慈" || card.short == "💎")
       this.timesDict[card.short]++;
@@ -98,15 +129,25 @@ export default class Stage {
       this.sute.push(card);
     }
 
+    this.calcDrawHeartCount();
+
+    if (this.sp != "kz2") {
+      this.addAp(-card.getCost(true));
+      this.autoAp();
+    }
+
     card.cost = card.props.cost;
 
     card.afterSkill(this);
 
     this.timesCount++;
 
-    if (this.effects.b && this.timesCount % 5 == 0) {
+    if (this.effect == "kj1b" && this.timesCount % 5 == 0) {
       this.sute.push(...this.te.splice(0));
       for (let i = 0; i < this.teMax; i++) this.draw(i);
+    }
+    if (this.effect == "st1a" && this.timesCount % 6 == 0) {
+      this.getAllCards().forEach((c) => c.cost++);
     }
 
     if (!this.protect && this.sp != "mg2") this.mental = false;
@@ -117,26 +158,40 @@ export default class Stage {
     for (let c of this.te) testStage.te.push(c.copy());
     testStage.mental = this.mental;
     testStage.protect = this.protect;
+    testStage.ap = this.ap;
+    testStage.apSpeed = this.apSpeed;
     testStage.ignition = this.ignition;
     testStage.timesDict = this.timesDict;
     testStage.sp = this.sp;
 
     let card = testStage.te[index];
+    let isReshuffle = card.isReshuffle(this);
 
     card.onSkill(testStage);
     for (let c of testStage.te) {
       c.onCross(testStage, card);
     }
 
-    return testStage.score;
+    return (
+      (testStage.score +
+        (isReshuffle
+          ? (this.drawHeartCount * 8) / this.getAllCards().length
+          : 0)) /
+      (1 +
+        (card.props?.skill?.cards?.length
+          ? card.props?.skill?.cards?.length * 8
+          : 0))
+    );
   }
 
   trigger(s) {
+    this.addAp(s.ap);
     this.addHeart(s.heart);
     this.addVoltage(s.voltage);
     this.addMental(s.mental);
     this.addProtect(s.protect);
     this.subtractAp(s["ap-"]);
+    this.addCard(s.cards);
   }
 
   addHeart(t) {
@@ -146,12 +201,18 @@ export default class Stage {
   }
   addVoltage(t) {
     if (t) {
-      if (this.sp == "td") this.score += t;
+      if (this.sp == "tz") {
+        this.score += t;
+        this.addAp(1 * t);
+      }
     }
   }
   addMental(t) {
     if (t) {
-      if (t > 0 && this.sp == "mg2") this.score += t;
+      if (t > 0 && this.sp == "mg2") {
+        this.score += t;
+        this.addAp(1 * t);
+      }
 
       if (t > 0) this.mental = true;
       else if (t < 0 && this.sp != "mg2") this.mental = false;
@@ -159,7 +220,10 @@ export default class Stage {
   }
   addProtect(t) {
     if (t) {
-      if (this.sp == "mg2") this.score += t;
+      if (this.sp == "mg2") {
+        this.score += t;
+        this.addAp(2 * t);
+      }
       this.protect = true;
     }
   }
@@ -168,6 +232,21 @@ export default class Stage {
       for (let c of this.getAllCards()) {
         c.cost += c.calcSubtractAp(t);
       }
+    }
+  }
+  addCard(t) {
+    if (t?.length) {
+      for (let i of t) {
+        this.yama.push(new Card(i));
+      }
+    }
+  }
+  addAp(t) {
+    if (t) {
+      let ap = this.ap + t;
+      if (ap > this.apMax) ap = this.apMax;
+      if (ap < 0) ap = 0;
+      this.ap = Number(ap.toFixed(2));
     }
   }
 }

@@ -3,7 +3,9 @@
     class="card"
     :style="{
       pointerEvents:
-        te && props.card.getCost(te) > 20 ? 'none' : props.pointerEvents,
+        te && props.card.getCost(te) > props.stage.ap
+          ? 'none'
+          : props.pointerEvents,
     }"
   >
     <div
@@ -17,6 +19,7 @@
     <div
       :style="{
         fontWeight: props.card.isReshuffle(props.stage) ? 'bold' : '',
+        fontStyle: props.card.isReshuffle(props.stage) ? 'italic' : '',
       }"
     >
       {{ props.card.short }}
@@ -32,7 +35,11 @@
     ></div>
     <div v-if="props.close" class="close">×</div>
     <div v-if="props.te" class="test">
-      {{ props.stage.testCard(props.stage.te.indexOf(props.card)) }}
+      {{
+        Number(
+          props.stage.testCard(props.stage.te.indexOf(props.card)).toFixed(1)
+        )
+      }}
     </div>
     <div
       v-if="props.stage?.timesDict[props.card.short] != undefined"

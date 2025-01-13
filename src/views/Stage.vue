@@ -31,41 +31,68 @@
     <form>
       <h2>STAGE</h2>
       <hr />
+      <div style="font-size: small">
+        <label for="qc">曲长: </label>
+        <input v-model="formData.qc" type="text" :disabled="ing" id="qc" />
+        s&nbsp;
+        <label for="qc">生化值: </label>
+        <input v-model="formData.sh" type="text" :disabled="ing" id="sh" />
+        &nbsp;
+        <button
+          @click="
+            formData.apSpeed = Number(
+              (1200 / formData.qc / formData.sh).toFixed(2)
+            );
+            formData.cardTimes = Math.floor((formData.qc * 8) / 3);
+          "
+          :disabled="ing"
+        >
+          计算AP回复速度/CARD回数
+        </button>
+      </div>
+      <div>
+        <label for="ap">AP回复速度: </label>
+        <input v-model="formData.apSpeed" type="text" :disabled="ing" id="ap" />
+      </div>
       <div>
         <label for="sp">SP: </label>
-        <select v-model="formData.sp" :disabled="ing" id="sp">
+        <select
+          v-model="formData.sp"
+          :disabled="ing"
+          id="sp"
+          @change="
+            formData.sp.includes('2')
+              ? (formData.strategy = 'score')
+              : (formData.strategy = 'cost')
+          "
+        >
           <option value="">--</option>
-          <option value="td">舞会缀</option>
+          <option value="tz">舞会缀</option>
           <option value="sy">舞会沙耶</option>
+          <!-- <option value="kz2">银河梢</option> -->
+          <option value="tz2">银河缀</option>
           <option value="mg2">银河慈</option>
         </select>
       </div>
       <div>
-        <input
-          v-model="formData.effects.a"
-          :disabled="ing"
-          type="checkbox"
-          id="104-3-3-1-a"
-        />
-        <label for="104-3-3-1-a">
-          山札切
-          <!-- AP3回复 -->
-          main效果reshuffle效果deck全card消费AP+1
-        </label>
+        <label for="effect">效果: </label>
+        <select v-model="formData.effect" :disabled="ing" id="effect">
+          <option value="">--</option>
+          <option value="st1a">
+            (2025年1月公会战A) skill6回使用 deck全card消费AP+1
+          </option>
+          <option value="kj1a">
+            (2025年1月个人战A) 山札切
+            <!-- AP3回复 -->
+            main效果reshuffle效果deck全card消费AP+1
+          </option>
+          <option value="kj1b">
+            (2025年1月个人战B) skill5回使用 手札全捨 山札手札上限引直
+          </option>
+        </select>
       </div>
       <div>
-        <input
-          v-model="formData.effects.b"
-          :disabled="ing"
-          type="checkbox"
-          id="104-3-3-1-b"
-        />
-        <label for="104-3-3-1-b">
-          skill5回使用 手札全捨 山札手札上限引直
-        </label>
-      </div>
-      <div>
-        <label for="jewelry">TARGET JEWELRY: </label>
+        <label for="jewelry">TARGET💎: </label>
         <input
           v-model="formData.jewelryCountTargetMin"
           :disabled="ing"
@@ -98,6 +125,14 @@
           id="skip-time"
         />
       </div>
+      <div>
+        <label for="strategy">策略: </label>
+        <select v-model="formData.strategy" :disabled="ing" id="strategy">
+          <option value="cost">pt/AP优先</option>
+          <option value="score">pt优先</option>
+          <option value="exCost">AP优先</option>
+        </select>
+      </div>
     </form>
 
     <div style="text-align: right">
@@ -112,16 +147,33 @@
     </div>
 
     <template v-if="ing && !auto">
-      <h2>
-        {{ stage.score }}
-        <div style="float: right">{{ stage.timesCount }}回</div>
+      <h2 class="flex-between">
+        <div>
+          {{ stage.score }}
+        </div>
+        <div>{{ stage.timesCount }}回</div>
       </h2>
-      <h2>
-        {{ stage.mental ? "100%" : "-%" }}
-        <div style="float: right">{{ stage.ignition ? "🔥" : "🚫" }}</div>
+      <h2 class="flex-between">
+        <div>
+          {{ stage.sp == "mg2" ? "∞" : stage.mental ? "100%" : "-%" }}
+        </div>
+        <div>
+          {{ stage.ignition ? "🔥" : "🚫" }}
+          {{ stage.sp == "kz2" ? "∞" : stage.ap }}
+        </div>
       </h2>
-
-      <h2>手札 {{ stage.te.length }}</h2>
+      <div style="text-align: right"></div>
+      <h2 class="flex-between">
+        <div>手札 {{ stage.te.length }}</div>
+        <button
+          @click="
+            stage.useCard(undefined);
+            refreshOsusume();
+          "
+        >
+          AP SKIP
+        </button>
+      </h2>
       <hr />
       <div class="grid">
         <card-item
@@ -164,15 +216,10 @@
             <td colspan="6">{{ autoResult.deck }}</td>
           </tr>
           <tr>
-            <td colspan="3">SP: {{ autoResult.formData.sp }}</td>
+            <td colspan="3">AP回复速度: {{ autoResult.formData.apSpeed }}</td>
             <td colspan="3">
-              效果:
-              {{
-                Object.keys(autoResult.formData.effects)
-                  .filter((key) => autoResult.formData.effects[key])
-                  .map((key) => key)
-                  .join(", ")
-              }}
+              SP: {{ autoResult.formData.sp }}, 效果:
+              {{ autoResult.formData.effect }}
             </td>
           </tr>
           <tr>
@@ -184,6 +231,7 @@
             <td>actual<br />💎</td>
             <td>kol慈<br />回数</td>
             <td>💎<br />回数</td>
+            <td>AP SKIP<br />回数</td>
             <td>pt</td>
             <td>%</td>
           </tr>
@@ -194,6 +242,7 @@
             <td>{{ item.jewelryCount }}</td>
             <td>{{ item.kt }}</td>
             <td>{{ item.jt }}</td>
+            <td>{{ item.st }}</td>
             <td>{{ item.score }}</td>
             <td>
               {{
@@ -229,16 +278,28 @@ const autoResults = ref([]);
 const detailsOpen = ref(false);
 
 const formData = ref({
+  qc: 140,
+  sh: 3.3,
+  apSpeed: 2.6,
   sp: "",
-  effects: {},
+  effect: "",
   jewelryCountTargetMin: 0,
   jewelryCountTargetMax: 20,
-  cardTimes: 360,
+  cardTimes: 373,
   skipTimes: 36,
+  strategy: "cost",
 });
 const jewelryCountTarget = ref(10);
 
-const cards = cardList.map((i) => new Card(i.short));
+const cards = cardList
+  .map((i) => new Card(i.short))
+  .sort((a, b) => {
+    if (typeof a.member == "number" && typeof b.member == "number")
+      return a.member - b.member;
+    if (typeof a.member == "number" && typeof b.member != "number") return -1;
+    if (typeof a.member != "number" && typeof b.member == "number") return 1;
+    return a.member > b.member ? 1 : a.member < b.member ? -1 : 0;
+  });
 
 const deck = ref(
   cardList
@@ -248,10 +309,15 @@ const deck = ref(
 );
 
 const stage = ref();
+
+window.getStage = () => stage.value;
+
 const newStage = () => {
   stage.value = new Stage([]);
+  stage.value.apSpeed = Number(formData.value.apSpeed);
   stage.value.sp = formData.value.sp;
-  stage.value.effects = formData.value.effects;
+  stage.value.effect = formData.value.effect;
+  stage.value.strategy = formData.value.strategy;
   stage.value.yama = deck.value.map((i) => new Card(i.short));
 };
 newStage();
@@ -268,7 +334,7 @@ const start = async (a) => {
   if (a) {
     autoResults.value.push({
       deck: deck.value.map((c) => c.short).join(", "),
-      formData: { ...formData.value, effects: { ...formData.value.effects } },
+      formData: { ...formData.value },
       dict: {},
     });
     for (
@@ -281,19 +347,14 @@ const start = async (a) => {
       let jewelryCount = 0;
       let kt = 0;
       let jt = 0;
+      let st = 0;
       for (let s = 0; s < Number(formData.value.skipTimes); s++) {
         await sleep();
         newStage();
         stage.value.start();
         for (let k = 0; k < Number(formData.value.cardTimes); k++) {
           if (!ing.value) break;
-          stage.value.useCard(
-            strategyPlay(
-              stage.value,
-              j,
-              stage.value.sp == "mg2" ? "score" : "cost"
-            )
-          );
+          stage.value.useCard(strategyPlay(stage.value, j));
         }
         if (!ing.value) break;
         score += stage.value.score;
@@ -302,6 +363,7 @@ const start = async (a) => {
           .filter((i) => i.member == "jewelry")?.length;
         kt += stage.value.timesDict.kol慈;
         jt += stage.value.timesDict["💎"];
+        st += stage.value.timesDict.apSkip;
       }
       autoResults.value.at(-1).dict[j] = {
         score: Number((score / formData.value.skipTimes).toFixed(2)),
@@ -310,6 +372,7 @@ const start = async (a) => {
         ),
         kt: Number((kt / formData.value.skipTimes).toFixed(2)),
         jt: Number((jt / formData.value.skipTimes).toFixed(2)),
+        st: Number((st / formData.value.skipTimes).toFixed(2)),
       };
       if (!ing.value) break;
     }
@@ -328,11 +391,7 @@ const sleep = async (ms) => {
 
 const osusume = ref(-1);
 const refreshOsusume = () => {
-  osusume.value = strategyPlay(
-    stage.value,
-    jewelryCountTarget.value,
-    stage.value.sp == "mg2" ? "score" : "cost"
-  );
+  osusume.value = strategyPlay(stage.value, jewelryCountTarget.value);
 };
 </script>
 
@@ -370,7 +429,8 @@ select,
 input {
   padding: 0.25em;
 }
-input[type="number"] {
+input[type="number"],
+input[type="text"] {
   width: 3em;
 }
 button {
@@ -389,5 +449,10 @@ button {
   // padding: 0.5em;
   // row-gap: 0.5em;
   // column-gap: 0.5em;
+}
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 </style>
