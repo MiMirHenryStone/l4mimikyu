@@ -10,7 +10,8 @@ export default class Stage {
     this.protect = false;
     this.apMax = 20;
     this.ignition = false;
-    this.timesDict = { kol慈: 0, "💎": 0, apSkip: 0 };
+    this.timesDict = {};
+    this.cardTimesDict = { apSkip: 0 };
 
     this.timesCount = 0;
     this.cardsCount = 0;
@@ -23,6 +24,7 @@ export default class Stage {
     this.apSpeed = 2.5;
 
     this.drawHeartCount = 0;
+    this.jewelryCountTarget = 0;
 
     this.testResults = [];
   }
@@ -35,22 +37,6 @@ export default class Stage {
     return this.yama.length ? this.yama : this.sute;
   }
 
-  calcDrawHeartCount() {
-    let n = 0;
-    this.getAllCards().forEach((c) => {
-      let draw;
-      if (c.props?.draw) {
-        if (typeof c.props?.draw == "function") draw = c.props?.draw(this);
-        else draw = c.props?.draw;
-      }
-      n += draw?.heart || 0;
-      if (this.sp == "tz") n += draw?.voltage || 0;
-      if (this.sp == "mg2") n += (draw?.mental || 0) + (draw?.protect || 0);
-    });
-    this.drawHeartCount = n;
-    return n;
-  }
-
   start() {
     if (this.sp == "kz2") this.ap = Infinity;
     for (let i = 0; i < this.teMax; i++) {
@@ -58,9 +44,8 @@ export default class Stage {
       let card = this.yama.splice(index, 1)[0];
       this.te.push(card);
     }
-    this.calcDrawHeartCount();
 
-    this.testResults = this.te.map((c, i) => this.testCard(i));
+    this.testAllCards();
   }
 
   draw(index, drawFilter) {
@@ -96,14 +81,14 @@ export default class Stage {
   useCard(index) {
     if (index == undefined) {
       // console.log("AP SKIP");
-      this.timesDict.apSkip++;
+      this.cardTimesDict.apSkip++;
       this.autoAp();
       this.timesCount++;
       return;
     }
     let card = this.te[index];
-    if (card.short == "kol慈" || card.short == "💎")
-      this.timesDict[card.short]++;
+    if (!this.cardTimesDict[card.short]) this.cardTimesDict[card.short] = 0;
+    this.cardTimesDict[card.short]++;
     let isReshuffle = card.isReshuffle(this);
     card.onSkill(this);
     for (let c of this.te) {
@@ -135,8 +120,6 @@ export default class Stage {
       this.sute.push(card);
     }
 
-    this.calcDrawHeartCount();
-
     if (this.sp != "kz2") {
       this.addAp(-card.getCost(true));
       this.autoAp();
@@ -159,39 +142,97 @@ export default class Stage {
 
     if (!this.protect && this.sp != "mg2") this.mental = false;
 
-    this.testResults = this.te.map((c, i) => this.testCard(i));
+    this.testAllCards();
   }
 
-  testCard(index) {
+  calcTestDrawHeartCount() {
+    let n = 0;
+    let cards = this.getAllCards();
+    let jewelryCount = cards.filter((c) => c.short == "💎").length;
+    if (jewelryCount < this.jewelryCountTarget) {
+      for (let i = 0; i < this.jewelryCountTarget - jewelryCount; i++)
+        cards.push(new Card("💎"));
+    }
+    cards.forEach((c) => {
+      let draw;
+      if (c.props?.draw) {
+        if (typeof c.props?.draw == "function") draw = c.props?.draw(this);
+        else draw = c.props?.draw;
+      }
+      n += draw?.heart || 0;
+      if (this.sp == "tz") n += draw?.voltage || 0;
+      if (this.sp == "mg2") n += (draw?.mental || 0) + (draw?.protect || 0);
+    });
+    this.drawHeartCount = n;
+    return n;
+  }
+
+  testCard(index, drawCard) {
     let testStage = new Stage([]);
     for (let c of this.te) testStage.te.push(c.copy());
+    for (let c of this.sute) testStage.sute.push(c.copy());
+    for (let c of this.yama) testStage.yama.push(c.copy());
     testStage.mental = this.mental;
     testStage.protect = this.protect;
     testStage.ap = this.ap;
+    testStage.apMax = this.apMax;
     testStage.apSpeed = this.apSpeed;
     testStage.ignition = this.ignition;
     testStage.timesDict = this.timesDict;
     testStage.sp = this.sp;
+    testStage.jewelryCountTarget = this.jewelryCountTarget;
+
+    let oldCost, newCost;
+    if (drawCard) {
+      oldCost = testStage.te[index].getCost(true);
+      testStage.te[index] = drawCard;
+      newCost = testStage.te[index].getCost(true);
+
+      if (newCost > testStage.apMax) return 0;
+    }
 
     let card = testStage.te[index];
-    let isReshuffle = card.isReshuffle(this);
+    let isReshuffle = card.isReshuffle(testStage);
 
     card.onSkill(testStage);
     for (let c of testStage.te) {
       c.onCross(testStage, card);
     }
 
-    return (
-      ((testStage.score +
-        (isReshuffle
-          ? (this.drawHeartCount * 8) / this.getAllCards().length
-          : 0)) /
-        (1 +
-          (card.props?.skill?.cards?.length
-            ? card.props?.skill?.cards?.length * 8
-            : 0))) *
-      (card.short == "上升姬芽" ? 3 / 4 : 1)
-    );
+    testStage.calcTestDrawHeartCount();
+
+    let res = testStage.score;
+
+    if (isReshuffle)
+      res +=
+        (testStage.drawHeartCount * 8) /
+        (testStage.getAllCards().length +
+          (card.props?.skill?.cards?.length ?? 0));
+
+    if (card.props?.drawFilters?.length == 1 && !drawCard) {
+      let drawFilter = card.props?.drawFilters[0];
+      let results = testStage
+        .getDrawYama()
+        .filter((c) =>
+          Object.keys(drawFilter).every((key) => c[key] == drawFilter[key])
+        );
+      results.forEach(
+        (c) => (res += testStage.testCard(index, c) / results.length)
+      );
+    }
+
+    if (card.props?.skill?.cards?.length)
+      res /= card.props?.skill?.cards?.length + 1;
+
+    if (card.short == "上升姬芽") res *= 3 / 4;
+
+    if (drawCard) return (res / (oldCost + newCost)) * oldCost;
+
+    return res;
+  }
+
+  testAllCards() {
+    this.testResults = this.te.map((c, i) => this.testCard(i));
   }
 
   trigger(s) {

@@ -57,7 +57,7 @@ export default class Card {
   onSkill(stage) {
     if (this.props?.skill) {
       if (typeof this.props.skill == "function") {
-        this.props.skill(stage);
+        stage.trigger(this.props.skill(stage));
       } else {
         stage.trigger(this.props.skill);
       }
@@ -74,7 +74,7 @@ export default class Card {
     this.teCostDelta = 0;
     if (this.props?.draw) {
       if (typeof this.props.draw == "function") {
-        this.props.draw(stage, this);
+        stage.trigger(this.props.draw(stage, this));
       } else {
         stage.trigger(this.props.draw);
       }
@@ -289,7 +289,7 @@ export const cardList = [
     draw: (stage) => {
       let res = {};
       if (stage.mental) res = { heart: 1 };
-      stage.trigger(res);
+      return res;
     },
   },
   {
@@ -416,7 +416,7 @@ export const cardList = [
     draw: (stage) => {
       let res = {};
       if (stage.mental) res = { protect: 1 };
-      stage.trigger(res);
+      return res;
     },
   },
   {
@@ -459,7 +459,7 @@ export const cardList = [
       let res = {};
       if (stage.mental) res = { heart: 3 };
       else res = { heart: 2 };
-      stage.trigger(res);
+      return res;
     },
     draw: { mental: 1 },
   },
@@ -545,7 +545,7 @@ export const cardList = [
     draw: (stage) => {
       let res = {};
       if (stage.mental) res = { voltage: 1 };
-      stage.trigger(res);
+      return res;
     },
   },
   {

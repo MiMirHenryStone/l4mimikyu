@@ -8,7 +8,6 @@ function newIndexList(stage) {
 function scoreFilter(stage, indexList) {
   let scoreList = indexList.map((index) => stage.testResults[index]);
   let max = Math.max(...scoreList);
-  if (max == 0) return drawFilterSingleFilter(stage, indexList);
   return indexList.filter((index, i) => scoreList[i] == max);
 }
 function costFilter(stage, indexList) {
@@ -23,7 +22,7 @@ function costFilter(stage, indexList) {
     );
     if (min <= stage.apSpeed)
       return indexList.filter((index) => stage.te[index].getCost(true) == min);
-    else return drawFilterSingleFilter(stage, indexList);
+    else return [];
   } else return indexList.filter((index, i) => costScoreList[i] == max);
 }
 function costSubtractFilter(stage, indexList) {
@@ -39,38 +38,10 @@ function costSubtractFilter(stage, indexList) {
   let min = Math.min(...csList);
   return indexList.filter((index, i) => csList[i] == min);
 }
-// lttf
-function drawFilterSingleFilter(stage, indexList) {
-  let yama = stage.getDrawYama();
-  let reshuffleProbabilityList = indexList.map((index) => {
-    let card = stage.te[index];
-    let results = yama;
-    if (card.props?.drawFilters) {
-      let drawFilter = card.props?.drawFilters[0];
-      results = yama.filter((c) =>
-        Object.keys(drawFilter).every((key) => c[key] == drawFilter[key])
-      );
-      if (!results.length) results = yama;
-    }
-    return results.filter((c) => c.isReshuffle(stage)).length / results.length;
-  });
-  // let standard = yama.filter((c) => c.isReshuffle(stage)).length / yama.length;
-  let max = Math.max(...reshuffleProbabilityList);
-  // if (max <= standard) return [];
-  return indexList.filter((index, i) => reshuffleProbabilityList[i] == max);
-}
 // 花结
 function drawFilterReshuffleFilter(stage, indexList) {
   let newList = indexList.filter(
     (index) => stage.te[index].props?.drawFilters?.length
-  );
-  if (newList.length) return newList;
-  else return indexList;
-}
-// 音击
-function yamaReshuffleFilter(stage, indexList) {
-  let newList = indexList.filter(
-    (index) => stage.te[index].props?.yamaReshuffle
   );
   if (newList.length) return newList;
   else return indexList;
@@ -86,21 +57,6 @@ function mentalFilter(stage, indexList) {
 // dress
 function dressFilter(stage, indexList) {
   let newList = indexList.filter((index) => stage.te[index].member == "dress");
-  if (newList.length) return newList;
-  else return indexList;
-}
-function addDressFilter(stage, indexList) {
-  let newList = indexList.filter(
-    (index) => !stage.te[index].props?.skill?.cards
-  );
-  if (newList.length) return newList;
-  else return indexList.filter((index) => stage.testResults[index]);
-}
-// 上升
-function ignitionReshuffleFilter(stage, indexList) {
-  let newList = indexList.filter(
-    (index) => typeof stage.te[index].props?.reshuffle != "function"
-  );
   if (newList.length) return newList;
   else return indexList;
 }
@@ -127,6 +83,7 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
       (stage.sp == "mg2" || stage.sp == "tz2" || stage.sp == "kz2"
         ? "score"
         : "cost");
+    if (stage.ap + stage.apSpeed >= stage.apMax) first = "score";
   }
 
   // ignition
@@ -139,21 +96,7 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
         c.short != "上升姬芽"
     )
   ) {
-    if (first != "score")
-      res = scoreFilter(
-        stage,
-        costFilter(
-          stage,
-          newIndexList(stage).filter((i) => {
-            let c = stage.te[i];
-            return (
-              (c.getMain(stage) == "mental" || c.getMain(stage) == "protect") &&
-              c.short != "上升姬芽"
-            );
-          })
-        )
-      )[0];
-    else
+    if (first == "score") {
       res = scoreFilter(
         stage,
         newIndexList(stage).filter((i) => {
@@ -164,16 +107,30 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
           );
         })
       )[0];
+    } else {
+      res = costFilter(
+        stage,
+        newIndexList(stage).filter((i) => {
+          let c = stage.te[i];
+          return (
+            (c.getMain(stage) == "mental" || c.getMain(stage) == "protect") &&
+            c.short != "上升姬芽"
+          );
+        })
+      )[0];
+    }
   }
   if (res == undefined) {
-    // jewelry
+    // kol慈
     index = stage.te.findIndex((c) => c.short == "kol慈");
     if (
       index >= 0 &&
       stage.getAllCards().filter((c) => c.member == "jewelry").length <
         jewelryCountTarget &&
       stage.te[index].getCost(true) <
-        (first == "score" ? stage.ap : stage.ap + stage.apSpeed - 4)
+        (first == "score"
+          ? stage.ap
+          : stage.ap + Math.min(0, stage.apSpeed - 4))
     ) {
       res = index;
     }
@@ -192,8 +149,16 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
     }
   }
   if (res == undefined) {
-    // let hasReshuffle = stage.te.find((i) => i.isReshuffle(stage));
-    if (first != "score") {
+    if (first == "score") {
+      res = drawFilterReshuffleFilter(
+        stage,
+        jewelryFilter(
+          stage,
+          jewelryCountTarget,
+          scoreFilter(stage, dressFilter(stage, newIndexList(stage)))
+        )
+      )[0];
+    } else {
       res = costSubtractFilter(
         stage,
         drawFilterReshuffleFilter(
@@ -201,25 +166,10 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
           jewelryFilter(
             stage,
             jewelryCountTarget,
-            addDressFilter(
+            costFilter(
               stage,
-              costFilter(
-                stage,
-                mentalFilter(stage, dressFilter(stage, newIndexList(stage)))
-              )
+              mentalFilter(stage, dressFilter(stage, newIndexList(stage)))
             )
-          )
-        )
-      )[0];
-    } else {
-      res = drawFilterReshuffleFilter(
-        stage,
-        jewelryFilter(
-          stage,
-          jewelryCountTarget,
-          addDressFilter(
-            stage,
-            scoreFilter(stage, dressFilter(stage, newIndexList(stage)))
           )
         )
       )[0];

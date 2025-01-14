@@ -55,6 +55,15 @@
         <input v-model="formData.apSpeed" type="text" :disabled="ing" id="ap" />
       </div>
       <div>
+        <label for="card-time">暂停回数: </label>
+        <input
+          v-model="formData.cardTimes"
+          :disabled="ing"
+          type="number"
+          id="card-time"
+        />
+      </div>
+      <div>
         <label for="sp">SP: </label>
         <select
           v-model="formData.sp"
@@ -92,7 +101,30 @@
         </select>
       </div>
       <div>
-        <label for="jewelry">TARGET💎: </label>
+        <label for="strategy">策略: </label>
+        <select v-model="formData.strategy" :disabled="ing" id="strategy">
+          <option value="cost">pt/AP优先</option>
+          <option value="score">pt优先</option>
+          <!-- <option value="exCost">AP优先</option> -->
+        </select>
+      </div>
+      <div>
+        <label for="jewelry">LIVE TARGET💎: </label>
+        <input
+          v-model="jewelryCountTarget"
+          type="number"
+          id="jewelry"
+          @change="
+            if (ing && !auto) {
+              stage.jewelryCountTarget = jewelryCountTarget;
+              stage.testAllCards();
+              refreshOsusume();
+            }
+          "
+        />
+      </div>
+      <div>
+        <label for="jewelry">SKIP TARGET💎: </label>
         <input
           v-model="formData.jewelryCountTargetMin"
           :disabled="ing"
@@ -106,22 +138,6 @@
           type="number"
           id="jewelry"
         />
-        /
-        <input
-          v-model="jewelryCountTarget"
-          type="number"
-          id="jewelry"
-          @change="if (ing && !auto) refreshOsusume();"
-        />
-      </div>
-      <div>
-        <label for="card-time">暂停回数: </label>
-        <input
-          v-model="formData.cardTimes"
-          :disabled="ing"
-          type="number"
-          id="card-time"
-        />
       </div>
       <div>
         <label for="skip-time">SKIP回数: </label>
@@ -131,14 +147,6 @@
           type="number"
           id="skip-time"
         />
-      </div>
-      <div>
-        <label for="strategy">策略: </label>
-        <select v-model="formData.strategy" :disabled="ing" id="strategy">
-          <option value="cost">pt/AP优先</option>
-          <option value="score">pt优先</option>
-          <!-- <option value="exCost">AP优先</option> -->
-        </select>
       </div>
     </form>
 
@@ -217,21 +225,20 @@
       </div>
     </template>
     <template v-else>
-      <table v-for="(autoResult, index) in autoResults" style="width: 100%">
+      <table v-for="(autoResult, index) in autoResults">
         <thead>
           <tr>
             <td colspan="6">{{ autoResult.deck }}</td>
           </tr>
           <tr>
-            <td colspan="3">AP回复速度: {{ autoResult.formData.apSpeed }}</td>
-            <td colspan="3">
-              SP: {{ autoResult.formData.sp }}, 效果:
-              {{ autoResult.formData.effect }}
-            </td>
+            <td colspan="2">AP回复速度: {{ autoResult.formData.apSpeed }}</td>
+            <td colspan="2">暂停回数: {{ autoResult.formData.cardTimes }}</td>
+            <td colspan="2">SKIP回数: {{ autoResult.formData.skipTimes }}</td>
           </tr>
           <tr>
-            <td colspan="3">暂停回数: {{ autoResult.formData.cardTimes }}</td>
-            <td colspan="3">SKIP回数: {{ autoResult.formData.skipTimes }}</td>
+            <td colspan="2">SP: {{ autoResult.formData.sp }}</td>
+            <td colspan="2">效果: {{ autoResult.formData.effect }}</td>
+            <td colspan="2">策略: {{ autoResult.formData.strategy }}</td>
           </tr>
           <tr>
             <td>target<br />💎</td>
@@ -244,12 +251,19 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(item, key) in autoResult.dict">
+          <tr
+            v-for="(item, key) in autoResult.dict"
+            style="cursor: pointer"
+            @click="
+              dialogData = { key, ...item };
+              nextTick(() => dialog.showModal());
+            "
+          >
             <td>{{ key }}</td>
             <!-- <td>{{ item.jewelryCount }}</td> -->
-            <td>{{ item.kt }}</td>
-            <td>{{ item.jt }}</td>
-            <td>{{ item.st }}</td>
+            <td>{{ item.cardTimesDict.kol慈 ?? 0 }}</td>
+            <td>{{ item.cardTimesDict["💎"] ?? 0 }}</td>
+            <td>{{ item.cardTimesDict.apSkip }}</td>
             <td>{{ item.score }}</td>
             <td>
               {{
@@ -267,6 +281,33 @@
           </tr>
         </tbody>
       </table>
+      <dialog v-if="dialogData" ref="dialog">
+        <table>
+          <thead>
+            <tr>
+              <td>target💎</td>
+              <td>{{ dialogData.key }}</td>
+            </tr>
+            <tr>
+              <td>pt</td>
+              <td>{{ dialogData.score }}</td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(value, key) in dialogData.cardTimesDict">
+              <td>{{ key }}</td>
+              <td>{{ value }}回</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2" style="text-align: center">
+                <button @click="dialogData = undefined">关闭</button>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </dialog>
     </template>
   </div>
 </template>
@@ -283,6 +324,9 @@ const auto = ref(false);
 const autoResults = ref([]);
 
 const detailsOpen = ref(false);
+
+const dialog = ref();
+const dialogData = ref();
 
 const formData = ref({
   qc: 140,
@@ -352,12 +396,12 @@ const start = async (a) => {
       if (!ing.value) break;
       let score = 0;
       let jewelryCount = 0;
-      let kt = 0;
-      let jt = 0;
-      let st = 0;
+      let cardTimesDict = { apSkip: 0 };
+      for (let c of deck.value) cardTimesDict[c.short] = 0;
       for (let s = 0; s < Number(formData.value.skipTimes); s++) {
         await sleep();
         newStage();
+        stage.value.jewelryCountTarget = j;
         stage.value.start();
         for (let k = 0; k < Number(formData.value.cardTimes); k++) {
           if (!ing.value) break;
@@ -368,24 +412,28 @@ const start = async (a) => {
         jewelryCount += stage.value
           .getAllCards()
           .filter((i) => i.member == "jewelry")?.length;
-        kt += stage.value.timesDict.kol慈;
-        jt += stage.value.timesDict["💎"];
-        st += stage.value.timesDict.apSkip;
+        for (let key in stage.value.cardTimesDict) {
+          if (!cardTimesDict[key]) cardTimesDict[key] = 0;
+          cardTimesDict[key] += stage.value.cardTimesDict[key];
+        }
       }
+      if (!ing.value) break;
+      for (let key in cardTimesDict)
+        cardTimesDict[key] = Number(
+          (cardTimesDict[key] / formData.value.skipTimes).toFixed(2)
+        );
       autoResults.value.at(-1).dict[j] = {
         score: Number((score / formData.value.skipTimes).toFixed(2)),
         jewelryCount: Number(
           (jewelryCount / formData.value.skipTimes).toFixed(2)
         ),
-        kt: Number((kt / formData.value.skipTimes).toFixed(2)),
-        jt: Number((jt / formData.value.skipTimes).toFixed(2)),
-        st: Number((st / formData.value.skipTimes).toFixed(2)),
+        cardTimesDict,
       };
-      if (!ing.value) break;
     }
     ing.value = false;
   } else {
     newStage();
+    stage.value.jewelryCountTarget = jewelryCountTarget.value;
     stage.value.start();
 
     refreshOsusume();
@@ -407,14 +455,20 @@ const refreshOsusume = () => {
   box-shadow: cyan 0 0 2px 2px;
 }
 table {
+  width: 100%;
   table-layout: fixed;
   border-spacing: 0;
   font-size: small;
   thead {
     font-weight: bold;
   }
-  tbody tr:nth-child(2n + 1) {
-    background: #aaaaaa55;
+  tbody tr {
+    &:nth-child(2n + 1) {
+      background: #aaaaaa55;
+    }
+    &:hover {
+      background: #aaaaaaaa;
+    }
   }
   td {
     padding: 0.25em;
@@ -435,6 +489,7 @@ form > div {
 select,
 input {
   padding: 0.25em;
+  max-width: 100%;
 }
 input[type="number"],
 input[type="text"] {
@@ -461,5 +516,19 @@ button {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+dialog {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 50%;
+  margin: auto;
+  &::backdrop {
+    position: fixed;
+    inset: 0px;
+    background: #555555aa;
+  }
 }
 </style>

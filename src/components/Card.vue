@@ -37,7 +37,7 @@
     <div v-if="props.te" class="test">
       {{
         Number(
-          props.stage.testResults[props.stage.te.indexOf(props.card)].toFixed(1)
+          props.stage.testResults[props.stage.te.indexOf(props.card)].toFixed(2)
         )
       }}
     </div>
