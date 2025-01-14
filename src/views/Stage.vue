@@ -47,7 +47,7 @@
           "
           :disabled="ing"
         >
-          计算AP回复速度/CARD回数
+          计算AP回复速度/暂停回数
         </button>
       </div>
       <div>
@@ -115,7 +115,7 @@
         />
       </div>
       <div>
-        <label for="card-time">CARD回数: </label>
+        <label for="card-time">暂停回数: </label>
         <input
           v-model="formData.cardTimes"
           :disabled="ing"
@@ -230,7 +230,7 @@
             </td>
           </tr>
           <tr>
-            <td colspan="3">CARD回数: {{ autoResult.formData.cardTimes }}</td>
+            <td colspan="3">暂停回数: {{ autoResult.formData.cardTimes }}</td>
             <td colspan="3">SKIP回数: {{ autoResult.formData.skipTimes }}</td>
           </tr>
           <tr>
@@ -293,7 +293,7 @@ const formData = ref({
   jewelryCountTargetMin: 0,
   jewelryCountTargetMax: 20,
   cardTimes: 373,
-  skipTimes: 36,
+  skipTimes: 100,
   strategy: "cost",
 });
 const jewelryCountTarget = ref(10);

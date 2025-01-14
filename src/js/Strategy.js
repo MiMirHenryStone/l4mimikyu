@@ -6,14 +6,14 @@ function newIndexList(stage) {
   return indexList;
 }
 function scoreFilter(stage, indexList) {
-  let scoreList = indexList.map((index) => stage.testCard(index));
+  let scoreList = indexList.map((index) => stage.testResults[index]);
   let max = Math.max(...scoreList);
   if (max == 0) return drawFilterSingleFilter(stage, indexList);
   return indexList.filter((index, i) => scoreList[i] == max);
 }
 function costFilter(stage, indexList) {
   let fullCostScoreList = stage.te.map(
-    (c, index) => stage.testCard(index) / stage.te[index].getCost(true)
+    (c, index) => stage.testResults[index] / stage.te[index].getCost(true)
   );
   let costScoreList = indexList.map((index) => fullCostScoreList[index]);
   let max = Math.max(...costScoreList);
@@ -94,7 +94,7 @@ function addDressFilter(stage, indexList) {
     (index) => !stage.te[index].props?.skill?.cards
   );
   if (newList.length) return newList;
-  else return indexList;
+  else return indexList.filter((index) => stage.testResults[index]);
 }
 // 上升
 function ignitionReshuffleFilter(stage, indexList) {

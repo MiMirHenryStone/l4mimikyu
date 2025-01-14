@@ -13,6 +13,7 @@ export default class Stage {
     this.timesDict = { kol慈: 0, "💎": 0, apSkip: 0 };
 
     this.timesCount = 0;
+    this.cardsCount = 0;
 
     this.sp = "";
     this.effect = "";
@@ -22,6 +23,8 @@ export default class Stage {
     this.apSpeed = 2.5;
 
     this.drawHeartCount = 0;
+
+    this.testResults = [];
   }
 
   getAllCards() {
@@ -56,6 +59,8 @@ export default class Stage {
       this.te.push(card);
     }
     this.calcDrawHeartCount();
+
+    this.testResults = this.te.map((c, i) => this.testCard(i));
   }
 
   draw(index, drawFilter) {
@@ -93,6 +98,7 @@ export default class Stage {
       // console.log("AP SKIP");
       this.timesDict.apSkip++;
       this.autoAp();
+      this.timesCount++;
       return;
     }
     let card = this.te[index];
@@ -141,16 +147,19 @@ export default class Stage {
     card.afterSkill(this);
 
     this.timesCount++;
+    this.cardsCount++;
 
-    if (this.effect == "kj1b" && this.timesCount % 5 == 0) {
+    if (this.effect == "kj1b" && this.cardsCount % 5 == 0) {
       this.sute.push(...this.te.splice(0));
       for (let i = 0; i < this.teMax; i++) this.draw(i);
     }
-    if (this.effect == "st1a" && this.timesCount % 6 == 0) {
+    if (this.effect == "st1a" && this.cardsCount % 6 == 0) {
       this.getAllCards().forEach((c) => c.cost++);
     }
 
     if (!this.protect && this.sp != "mg2") this.mental = false;
+
+    this.testResults = this.te.map((c, i) => this.testCard(i));
   }
 
   testCard(index) {
