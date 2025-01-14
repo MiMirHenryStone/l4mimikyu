@@ -175,9 +175,7 @@ export const cardList = [
           stage.timesDict[this.short] = undefined;
         }
 
-        stage.getAllCards().forEach((c) => {
-          if (c.unit == "mrp") c.cost -= 3;
-        });
+        stage.trigger({ "ap-": [{ unit: "mrp", cost: -3 }] });
       }
     },
     cross(stage, card) {
@@ -362,7 +360,7 @@ export const cardList = [
   //   member: 3,
   //   cost: 5 + 15,
   //   main: "heart",
-  //   skill: { heart: 1 },
+  //   skill: { heart: 2 },
   // },
   {
     short: "银河缀",
@@ -549,6 +547,19 @@ export const cardList = [
     },
   },
   {
+    short: "偶活花帆",
+    member: 1,
+    cost: 9,
+    main: "heart",
+    reshuffle: true,
+    skill: { heart: 1 },
+    cross(stage, card, self) {
+      if (card.member == 2 || card.member == 5) {
+        self.teCostDelta -= 2;
+      }
+    },
+  },
+  {
     short: "快乐花帆",
     member: 1,
     cost: 2,
@@ -590,6 +601,14 @@ export const cardList = [
     draw: { voltage: 1 },
   },
   {
+    short: "梦境瑠璃",
+    member: 5,
+    cost: 4,
+    main: "reshuffle",
+    reshuffle: true,
+    skill: { heart: 1 },
+  },
+  {
     short: "rod瑠璃",
     member: 5,
     cost: 4,
@@ -599,6 +618,22 @@ export const cardList = [
     draw: { mental: 1 },
   },
   {
+    short: "一专瑠璃",
+    member: 5,
+    cost: 5,
+    main: "reshuffle",
+    reshuffle: true,
+    skill: { heart: 1 },
+  },
+  {
+    short: "abdl瑠璃",
+    member: 5,
+    cost: 4,
+    main: "reshuffle",
+    reshuffle: true,
+    skill: { mental: 1 },
+  },
+  {
     short: "白昼瑠璃",
     member: 5,
     cost: 3,
@@ -606,6 +641,20 @@ export const cardList = [
     reshuffle: true,
     skill: { mental: -1 },
     draw: { heart: 1 },
+  },
+  {
+    short: "mc瑠璃",
+    member: 5,
+    cost: 4,
+    main: "reshuffle",
+    reshuffle: true,
+    afterSkill(stage) {
+      if (stage.ignition) {
+        stage.trigger({ heart: 1 });
+      } else {
+        stage.trigger({ ap: 1 });
+      }
+    },
   },
   {
     short: "ritm吟",
@@ -655,7 +704,7 @@ export const cardList = [
     main: "protect",
     skill: { protect: 1, heart: 9, ap: -apMax },
     afterSkill(stage) {
-      if (stage.sp == "tz2") stage.trigger({ ap: 5 - 2 });
+      if (stage.sp == "mg2") stage.trigger({ ap: 5 - 2 });
     },
   },
 ];
