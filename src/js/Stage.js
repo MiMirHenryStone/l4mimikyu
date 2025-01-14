@@ -121,7 +121,7 @@ export default class Stage {
     }
 
     if (this.sp != "kz2") {
-      this.addAp(-card.getCost(true));
+      this.addAp(-card.getCost(this.te));
       this.autoAp();
     }
 
@@ -154,14 +154,7 @@ export default class Stage {
         cards.push(new Card("💎"));
     }
     cards.forEach((c) => {
-      let draw;
-      if (c.props?.draw) {
-        if (typeof c.props?.draw == "function") draw = c.props?.draw(this);
-        else draw = c.props?.draw;
-      }
-      n += draw?.heart || 0;
-      if (this.sp == "tz") n += draw?.voltage || 0;
-      if (this.sp == "mg2") n += (draw?.mental || 0) + (draw?.protect || 0);
+      n += c.calcDrawHeartCount(this);
     });
     this.drawHeartCount = n;
     return n;
@@ -184,9 +177,9 @@ export default class Stage {
 
     let oldCost, newCost;
     if (drawCard) {
-      oldCost = testStage.te[index].getCost(true);
+      oldCost = testStage.te[index].getCost(testStage.te);
       testStage.te[index] = drawCard;
-      newCost = testStage.te[index].getCost(true);
+      newCost = testStage.te[index].getCost(testStage.te);
 
       if (newCost > testStage.apMax) return 0;
     }
@@ -205,7 +198,7 @@ export default class Stage {
 
     if (isReshuffle)
       res +=
-        (testStage.drawHeartCount * 8) /
+        (testStage.drawHeartCount * this.teMax) /
         (testStage.getAllCards().length +
           (card.props?.skill?.cards?.length ?? 0));
 
@@ -226,7 +219,24 @@ export default class Stage {
 
     if (card.short == "上升姬芽") res *= 3 / 4;
 
-    if (drawCard) return (res / (oldCost + newCost)) * oldCost;
+    if (drawCard) res /= (oldCost + newCost) * oldCost;
+
+    if (card.props?.once) {
+      res +=
+        ((testStage.drawHeartCount - card.calcDrawHeartCount(testStage)) /
+          (testStage.getAllCards().length - 1) -
+          testStage.drawHeartCount / testStage.getAllCards().length) *
+        this.teMax ** 2;
+    }
+    if (card.props?.skill?.cards?.length) {
+      res +=
+        (testStage.drawHeartCount /
+          (testStage.getAllCards().length + card.props?.skill?.cards?.length) -
+          testStage.drawHeartCount / testStage.getAllCards().length) *
+        this.teMax ** 2;
+    }
+
+    if (res < 0) return 0;
 
     return res;
   }
@@ -236,13 +246,15 @@ export default class Stage {
   }
 
   trigger(s) {
-    this.addAp(s.ap);
-    this.addHeart(s.heart);
-    this.addVoltage(s.voltage);
-    this.addMental(s.mental);
-    this.addProtect(s.protect);
-    this.subtractAp(s["ap-"]);
-    this.addCard(s.cards);
+    if (s) {
+      this.addAp(s.ap);
+      this.addHeart(s.heart);
+      this.addVoltage(s.voltage);
+      this.addMental(s.mental);
+      this.addProtect(s.protect);
+      this.subtractAp(s["ap-"]);
+      this.addCard(s.cards);
+    }
   }
 
   addHeart(t) {

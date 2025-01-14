@@ -1,7 +1,7 @@
 function newIndexList(stage) {
   let indexList = [];
   for (let i = 0; i < stage.te.length; i++) {
-    if (stage.te[i].getCost(true) <= stage.ap) indexList.push(i);
+    if (stage.te[i].getCost(stage.te) <= stage.ap) indexList.push(i);
   }
   return indexList;
 }
@@ -10,18 +10,20 @@ function scoreFilter(stage, indexList) {
   let max = Math.max(...scoreList);
   return indexList.filter((index, i) => scoreList[i] == max);
 }
-function costFilter(stage, indexList) {
+function costFilter(stage, indexList, forceNotEmpty) {
   let fullCostScoreList = stage.te.map(
-    (c, index) => stage.testResults[index] / stage.te[index].getCost(true)
+    (c, index) => stage.testResults[index] / stage.te[index].getCost(stage.te)
   );
   let costScoreList = indexList.map((index) => fullCostScoreList[index]);
   let max = Math.max(...costScoreList);
-  if (max == 0 && Math.max(...fullCostScoreList) > 0) {
+  if (!forceNotEmpty && max == 0 && Math.max(...fullCostScoreList) > 0) {
     let min = Math.min(
-      ...indexList.map((index) => stage.te[index].getCost(true))
+      ...indexList.map((index) => stage.te[index].getCost(stage.te))
     );
     if (min <= stage.apSpeed)
-      return indexList.filter((index) => stage.te[index].getCost(true) == min);
+      return indexList.filter(
+        (index) => stage.te[index].getCost(stage.te) == min
+      );
     else return [];
   } else return indexList.filter((index, i) => costScoreList[i] == max);
 }
@@ -42,14 +44,6 @@ function costSubtractFilter(stage, indexList) {
 function drawFilterReshuffleFilter(stage, indexList) {
   let newList = indexList.filter(
     (index) => stage.te[index].props?.drawFilters?.length
-  );
-  if (newList.length) return newList;
-  else return indexList;
-}
-// mental
-function mentalFilter(stage, indexList) {
-  let newList = indexList.filter(
-    (index) => !(stage.te[index].props?.skill?.mental < 0)
   );
   if (newList.length) return newList;
   else return indexList;
@@ -116,7 +110,8 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
             (c.getMain(stage) == "mental" || c.getMain(stage) == "protect") &&
             c.short != "上升姬芽"
           );
-        })
+        }),
+        true
       )[0];
     }
   }
@@ -127,7 +122,7 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
       index >= 0 &&
       stage.getAllCards().filter((c) => c.member == "jewelry").length <
         jewelryCountTarget &&
-      stage.te[index].getCost(true) <
+      stage.te[index].getCost(stage.te) <
         (first == "score"
           ? stage.ap
           : stage.ap + Math.min(0, stage.apSpeed - 4))
@@ -138,7 +133,7 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
   if (res == undefined) {
     // jewelry over
     index = stage.te.findIndex(
-      (c) => c.member == "jewelry" && c.getCost(true) == 2
+      (c) => c.member == "jewelry" && c.getCost(stage.te) == 2
     );
     if (
       index >= 0 &&
@@ -166,10 +161,7 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
           jewelryFilter(
             stage,
             jewelryCountTarget,
-            costFilter(
-              stage,
-              mentalFilter(stage, dressFilter(stage, newIndexList(stage)))
-            )
+            costFilter(stage, dressFilter(stage, newIndexList(stage)))
           )
         )
       )[0];

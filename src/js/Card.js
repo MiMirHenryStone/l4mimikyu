@@ -39,6 +39,7 @@ export default class Card {
 
   getCost(te = false) {
     let cost = this.cost;
+    if (te && this.props?.teCostDelta) cost += this.props?.teCostDelta(te);
     if (te) cost += this.teCostDelta;
     return cost >= 1 ? cost : 1;
   }
@@ -79,6 +80,19 @@ export default class Card {
         stage.trigger(this.props.draw);
       }
     }
+  }
+
+  calcDrawHeartCount(stage) {
+    let n = 0;
+    let draw;
+    if (this.props?.draw) {
+      if (typeof this.props?.draw == "function") draw = this.props?.draw(stage);
+      else draw = this.props?.draw;
+    }
+    n += draw?.heart || 0;
+    if (stage.sp == "tz") n += draw?.voltage || 0;
+    if (stage.sp == "mg2") n += (draw?.mental || 0) + (draw?.protect || 0);
+    return n;
   }
 
   onCross(stage, card) {
@@ -584,6 +598,20 @@ export const cardList = [
     draw: { voltage: 1 },
   },
   {
+    short: "宇宙沙耶",
+    member: 2,
+    cost: 4,
+    main: "teMax",
+    skill: { voltage: 1 },
+  },
+  {
+    short: "沏茶沙耶",
+    member: 2,
+    cost: 2,
+    main: "love+",
+    skill: { voltage: 1 },
+  },
+  {
     short: "圣诞沙耶",
     member: 2,
     cost: 4,
@@ -686,6 +714,120 @@ export const cardList = [
     cost: 1,
     main: "teMax",
     once: true,
+  },
+  {
+    short: "蓝远吟",
+    member: 7,
+    cost: 3,
+    main: "dress",
+    skill: { cards: ["蓝远👗", "蓝远👗", "蓝远👗"] },
+    cross(stage, card) {
+      if (card.unit == "srb") stage.trigger({ voltage: 1 });
+    },
+  },
+  {
+    short: "蓝远👗",
+    member: "dress",
+    cost: 2,
+    main: "reshuffle",
+    reshuffle: true,
+    once: true,
+    skill: { heart: 1 },
+  },
+  {
+    short: "花结吟",
+    member: 7,
+    cost: 13,
+    teCostDelta(te) {
+      let delta = 0;
+      for (let c of te) {
+        if (c.unit == "srb") delta -= 3;
+      }
+      return delta;
+    },
+    main: "dress",
+    reshuffle: true,
+    skill: {
+      cards: [
+        "花结👗1",
+        "花结👗1",
+        "花结👗1",
+        "花结👗2",
+        "花结👗2",
+        "花结👗2",
+        "花结👖3",
+        "花结👖3",
+        "花结👖3",
+      ],
+    },
+    drawFilters: [
+      { member: "dress" },
+      { member: "dress" },
+      { member: "dress" },
+      { member: "dress" },
+      { member: "dress" },
+      { member: "dress" },
+      { member: "dress" },
+      { member: "dress" },
+    ],
+  },
+  {
+    short: "花结👗1",
+    member: "dress",
+    cost: 3,
+    main: "voltage",
+    once: true,
+    skill(stage) {
+      let res = { voltage: 2 };
+      if (stage.getAllCards().length >= 33) {
+        if (stage.sp == "tz2") res.heart = 1;
+        else res.heart = 2;
+      }
+      return res;
+    },
+  },
+  {
+    short: "花结👗2",
+    member: "dress",
+    cost: 3,
+    main: "protect",
+    once: true,
+    skill(stage) {
+      let res = { protect: 1 };
+      if (stage.getAllCards().length >= 33) {
+        if (stage.sp == "mg2") res.heart = 1;
+        else res.heart = 2;
+      }
+      return res;
+    },
+  },
+  {
+    short: "花结👖3",
+    member: "dress",
+    cost: 3,
+    main: "reshuffle",
+    reshuffle: true,
+    once: true,
+    skill(stage) {
+      if (stage.getAllCards().length >= 30) {
+        return { heart: 2 };
+      }
+    },
+    drawFilters: [
+      { unit: "srb" },
+      { unit: "srb" },
+      { unit: "srb" },
+      { unit: "srb" },
+      { unit: "srb" },
+      { unit: "srb" },
+    ],
+  },
+  {
+    short: "雪纺铃",
+    member: 8,
+    cost: 3,
+    main: "mental",
+    skill: { mental: 1 },
   },
   {
     short: "af缀",
