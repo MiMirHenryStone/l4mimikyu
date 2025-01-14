@@ -834,7 +834,11 @@ export const cardList = [
     member: 4,
     cost: 9,
     main: "voltage",
-    skill: { voltage: 1, heart: 9, ap: -apMax },
+    skill(stage) {
+      let res = { voltage: 2, heart: 10, ap: -apMax };
+      if (stage.sp == "tz") res.heart = 9;
+      return res;
+    },
     afterSkill(stage) {
       if (stage.sp == "tz2") stage.trigger({ ap: 20 });
     },
@@ -844,9 +848,13 @@ export const cardList = [
     member: 6,
     cost: 9,
     main: "protect",
-    skill: { protect: 1, heart: 9, ap: -apMax },
+    skill(stage) {
+      let res = { protect: 1, heart: 10, ap: -apMax };
+      if (stage.sp == "mg2") res.heart = 9;
+      return res;
+    },
     afterSkill(stage) {
-      if (stage.sp == "mg2") stage.trigger({ ap: 5 - 2 });
+      if (stage.sp == "mg2") stage.trigger({ ap: 17 - 2 });
     },
   },
 ];
