@@ -111,6 +111,13 @@ export default class Card {
     n += draw?.heart || 0;
     if (stage.sp == "tz") n += draw?.voltage || 0;
     if (stage.sp == "mg2") n += (draw?.mental || 0) + (draw?.protect || 0);
+
+    if (!stage.te.includes(this) && this.getCalcCost(stage) >= stage.apMax) {
+      let skill = this.getSkill(stage);
+      n += skill.heart || 0;
+      if (stage.sp == "tz") n += skill?.voltage || 0;
+      if (stage.sp == "mg2") n += (skill?.mental || 0) + (skill?.protect || 0);
+    }
     return n;
   }
 
