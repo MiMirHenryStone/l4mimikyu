@@ -356,7 +356,7 @@ const formData = ref({
 let localFormData = localStorage.getItem("formData");
 try {
   if (localFormData)
-    formData.value = { ...formData, ...JSON.parse(localFormData) };
+    formData.value = { ...formData.value, ...JSON.parse(localFormData) };
 } catch (error) {}
 
 const cards = cardList
