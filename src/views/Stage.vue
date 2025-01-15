@@ -70,7 +70,9 @@
           :disabled="ing"
           id="sp"
           @change="
-            formData.sp.includes('2') ? (formData.strategy = 'score') : null
+            formData.sp.includes('2')
+              ? (formData.strategy = 'score')
+              : (formData.strategy = 'cost')
           "
         >
           <option value="">--</option>
@@ -349,7 +351,7 @@ const formData = ref({
   jewelryCountTargetMax: 16,
   cardTimes: 373,
   skipTimes: 36,
-  strategy: "score",
+  strategy: "cost",
   jewelryCountTarget: 0,
 });
 

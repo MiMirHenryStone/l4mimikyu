@@ -13,7 +13,7 @@ function scoreFilter(stage, indexList) {
 }
 function costFilter(stage, indexList, forceNotEmpty) {
   let fullCostScoreList = stage.te.map(
-    (c, index) => stage.testResults[index] / stage.te[index].getTrueCost(stage)
+    (c, index) => stage.testResults[index] / stage.te[index].getCalcCost(stage)
   );
   let costScoreList = indexList.map((index) => fullCostScoreList[index]);
   let max = Math.max(...costScoreList);

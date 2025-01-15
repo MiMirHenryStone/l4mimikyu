@@ -47,16 +47,16 @@ export default class Card {
     return cost >= 1 ? cost : 1;
   }
 
-  getTrueCost(stage) {
+  getCalcCost(stage) {
     let skill = this.getSkill(stage);
     let cost = this.getCost(stage.te);
-    cost -= skill?.ap ?? 0;
-    if (cost > apMax) cost = apMax;
-    cost -= skill?.spAp ?? 0;
-    if (cost > apMax) cost = apMax;
+    let calcCost = cost;
+    calcCost -= skill?.ap ?? 0;
+    calcCost -= skill?.spAp ?? 0;
 
-    if (cost < 1) cost = 1;
-    return cost;
+    if (calcCost < 1 || (calcCost >= stage.apMax && cost <= stage.ap))
+      calcCost = 1;
+    return calcCost;
   }
 
   isReshuffle(stage) {
