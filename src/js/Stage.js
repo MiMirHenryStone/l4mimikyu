@@ -102,6 +102,7 @@ export default class Stage {
     card.cost = card.props.cost;
 
     card.onSkill(this);
+    card.afterSkill(this);
     for (let c of this.te) {
       c.onCross(this, card);
     }
@@ -130,8 +131,6 @@ export default class Stage {
     } else {
       this.sute.push(card);
     }
-
-    card.afterSkill(this);
 
     this.timesCount++;
     this.cardsCount++;
