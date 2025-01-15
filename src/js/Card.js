@@ -15,6 +15,7 @@ export default class Card {
       }
 
       this.cost = props.cost;
+      this.costDelta = 0;
       this.teCostDelta = 0;
     }
   }
@@ -22,6 +23,7 @@ export default class Card {
   copy() {
     let newCard = new Card(this.short);
     newCard.cost = this.cost;
+    newCard.costDelta = this.costDelta;
     newCard.teCostDelta = this.teCostDelta;
     return newCard;
   }
@@ -39,9 +41,22 @@ export default class Card {
 
   getCost(te = false) {
     let cost = this.cost;
+    cost += this.costDelta;
     if (te && this.props?.teCostDelta) cost += this.props?.teCostDelta(te);
     if (te) cost += this.teCostDelta;
     return cost >= 1 ? cost : 1;
+  }
+
+  getTrueCost(stage) {
+    let skill = this.getSkill(stage);
+    let cost = this.getCost(stage.te);
+    cost -= skill?.ap ?? 0;
+    if (cost > apMax) cost = apMax;
+    cost -= skill?.spAp ?? 0;
+    if (cost > apMax) cost = apMax;
+
+    if (cost < 1) cost = 1;
+    return cost;
   }
 
   isReshuffle(stage) {
@@ -71,7 +86,7 @@ export default class Card {
 
   afterSkill(stage) {
     if (this.props?.afterSkill) {
-      this.props.afterSkill(stage);
+      this.props.afterSkill(stage, this);
     }
   }
 
@@ -185,9 +200,7 @@ export const cardList = [
     skill: { mental: 1, protect: 1 },
     afterSkill(stage) {
       if (stage.ignition) {
-        if (stage.timesDict[this.short] == undefined)
-          stage.timesDict[this.short] = 0;
-        else stage.timesDict[this.short]++;
+        stage.timesDict[this.short]++;
         if (stage.timesDict[this.short] >= 3) {
           stage.ignition = false;
           stage.timesDict[this.short] = undefined;
@@ -202,6 +215,8 @@ export const cardList = [
         if (main == "mental" || main == "protect") {
           stage.ignition = true;
         }
+        if (stage.timesDict[this.short] == undefined)
+          stage.timesDict[this.short] = 0;
       }
     },
   },
@@ -273,16 +288,17 @@ export const cardList = [
       { unit: "srb" },
       { member: "dress" },
     ],
+    skill: {
+      "ap-": [
+        { unit: "srb", cost: -3 },
+        { member: "dress", cost: -3 },
+      ],
+    },
     cross(stage, card, self) {
       if (card.unit == "srb") {
         stage.trigger({ heart: 1 });
         self.teCostDelta -= 3;
       }
-    },
-    afterSkill(stage) {
-      stage.getAllCards().forEach((c) => {
-        if (c.unit == "srb" || c.member == "dress") c.cost -= 3;
-      });
     },
   },
   {
@@ -325,11 +341,18 @@ export const cardList = [
     },
   },
   {
-    short: "hsct慈",
+    short: "af慈",
     member: 6,
-    cost: 4,
-    main: "reshuffle",
-    reshuffle: true,
+    cost: 9,
+    main: "protect",
+    skill(stage) {
+      let res = { protect: 1, heart: 10, ap: -apMax };
+      if (stage.sp == "mg2") {
+        res.heart = 9;
+        res.spAp = 17 - 2;
+      }
+      return res;
+    },
   },
   {
     short: "kol慈",
@@ -385,9 +408,10 @@ export const cardList = [
     member: 4,
     cost: 5 - 3,
     main: "voltage",
-    skill: { voltage: 1, heart: 1 },
-    afterSkill(stage) {
-      if (stage.sp == "tz2") stage.trigger({ ap: 6 - 1 });
+    skill(stage) {
+      let res = { voltage: 1, heart: 1 };
+      if (stage.sp == "tz2") res.spAp = 6 - 1;
+      return res;
     },
   },
   {
@@ -396,9 +420,10 @@ export const cardList = [
     cost: 5,
     main: "reshuffle",
     reshuffle: true,
-    skill: { mental: 2, protect: 1 },
-    afterSkill(stage) {
-      if (stage.sp == "mg2") stage.trigger({ ap: 20 });
+    skill(stage) {
+      let res = { mental: 2, protect: 1 };
+      if (stage.sp == "mg2") res.spAp = 20;
+      return res;
     },
   },
   {
@@ -496,6 +521,18 @@ export const cardList = [
     draw: { voltage: 1, protect: 1 },
   },
   {
+    short: "af缀",
+    member: 4,
+    cost: 9,
+    main: "voltage",
+    skill(stage) {
+      let res = { voltage: 2, heart: 10, ap: -apMax };
+      if (stage.sp == "tz") res.heart = 9;
+      if (stage.sp == "tz2") res.spAp = 20;
+      return res;
+    },
+  },
+  {
     short: "蛋糕慈",
     member: 6,
     cost: 4,
@@ -527,6 +564,13 @@ export const cardList = [
     main: "protect",
     skill: { protect: 1 },
     draw: { protect: 1 },
+  },
+  {
+    short: "hsct慈",
+    member: 6,
+    cost: 4,
+    main: "reshuffle",
+    reshuffle: true,
   },
   {
     short: "ritm花帆",
@@ -563,6 +607,13 @@ export const cardList = [
       if (stage.mental) res = { voltage: 1 };
       return res;
     },
+  },
+  {
+    short: "舞会花帆",
+    member: 1,
+    cost: 6,
+    main: "heart",
+    skill: { heart: 1 },
   },
   {
     short: "偶活花帆",
@@ -680,12 +731,14 @@ export const cardList = [
     cost: 4,
     main: "reshuffle",
     reshuffle: true,
-    afterSkill(stage) {
+    skill(stage) {
+      let res;
       if (stage.ignition) {
-        stage.trigger({ heart: 1 });
+        res = { heart: 1 };
       } else {
-        stage.trigger({ ap: 1 });
+        res = { ap: 1 };
       }
+      return res;
     },
   },
   {
@@ -827,38 +880,20 @@ export const cardList = [
     ],
   },
   {
+    short: "db铃",
+    member: 8,
+    cost: 1,
+    main: "heart",
+    skill: { heart: 1 },
+    afterSkill(stage, self) {
+      self.costDelta--;
+    },
+  },
+  {
     short: "雪纺铃",
     member: 8,
     cost: 3,
     main: "mental",
     skill: { mental: 1 },
-  },
-  {
-    short: "af缀",
-    member: 4,
-    cost: 9,
-    main: "voltage",
-    skill(stage) {
-      let res = { voltage: 2, heart: 10, ap: -apMax };
-      if (stage.sp == "tz") res.heart = 9;
-      return res;
-    },
-    afterSkill(stage) {
-      if (stage.sp == "tz2") stage.trigger({ ap: 20 });
-    },
-  },
-  {
-    short: "af慈",
-    member: 6,
-    cost: 9,
-    main: "protect",
-    skill(stage) {
-      let res = { protect: 1, heart: 10, ap: -apMax };
-      if (stage.sp == "mg2") res.heart = 9;
-      return res;
-    },
-    afterSkill(stage) {
-      if (stage.sp == "mg2") stage.trigger({ ap: 17 - 2 });
-    },
   },
 ];

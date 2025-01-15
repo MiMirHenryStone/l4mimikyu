@@ -13,7 +13,7 @@ function scoreFilter(stage, indexList) {
 }
 function costFilter(stage, indexList, forceNotEmpty) {
   let fullCostScoreList = stage.te.map(
-    (c, index) => stage.testResults[index] / stage.te[index].getCost(stage.te)
+    (c, index) => stage.testResults[index] / stage.te[index].getTrueCost(stage)
   );
   let costScoreList = indexList.map((index) => fullCostScoreList[index]);
   let max = Math.max(...costScoreList);
@@ -29,7 +29,11 @@ function costFilter(stage, indexList, forceNotEmpty) {
   } else return indexList.filter((index, i) => costScoreList[i] == max);
 }
 function costSubtractFilter(stage, indexList) {
-  let csList = indexList.map((index) => {
+  let newList = indexList.filter(
+    (index) => stage.te[index].getSkill(stage)?.["ap-"]
+  );
+  if (!newList.length) newList = indexList;
+  let csList = newList.map((index) => {
     let card = stage.te[index];
     let sa = 0;
     stage.getAllCards().forEach((c) => {
@@ -39,7 +43,7 @@ function costSubtractFilter(stage, indexList) {
     return sa;
   });
   let min = Math.min(...csList);
-  return indexList.filter((index, i) => csList[i] == min);
+  return newList.filter((index, i) => csList[i] == min);
 }
 // 花结
 function drawFilterReshuffleFilter(stage, indexList) {
@@ -124,9 +128,7 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
       stage.getAllCards().filter((c) => c.member == "jewelry").length <
         jewelryCountTarget &&
       stage.te[index].getCost(stage.te) <
-        (first == "score"
-          ? stage.ap
-          : stage.ap + Math.min(0, stage.apSpeed - 4))
+        (first == "score" ? stage.ap : stage.ap + stage.apSpeed * 2)
     ) {
       res = index;
     }

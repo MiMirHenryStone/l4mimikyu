@@ -94,6 +94,13 @@ export default class Stage {
     if (!this.cardTimesDict[card.short]) this.cardTimesDict[card.short] = 0;
     this.cardTimesDict[card.short]++;
     let isReshuffle = card.isReshuffle(this);
+
+    if (this.sp != "kz2") {
+      this.addAp(-card.getCost(this.te));
+    }
+
+    card.cost = card.props.cost;
+
     card.onSkill(this);
     for (let c of this.te) {
       c.onCross(this, card);
@@ -124,13 +131,6 @@ export default class Stage {
       this.sute.push(card);
     }
 
-    if (this.sp != "kz2") {
-      this.addAp(-card.getCost(this.te));
-      this.autoAp();
-    }
-
-    card.cost = card.props.cost;
-
     card.afterSkill(this);
 
     this.timesCount++;
@@ -145,6 +145,10 @@ export default class Stage {
     }
 
     if (!this.protect && this.sp != "mg2") this.mental = false;
+
+    if (this.sp != "kz2") {
+      this.autoAp();
+    }
 
     this.testAllCards();
   }
@@ -165,7 +169,7 @@ export default class Stage {
   }
 
   testCard(index, drawCard) {
-    let short = this.te[index].short;
+    let short = drawCard ? drawCard.short : this.te[index].short;
     if (short == "kol慈") return 0.01;
     if (["ritm吟", "pa吟"].includes(short)) return -0.01;
 
@@ -179,7 +183,7 @@ export default class Stage {
     testStage.apMax = this.apMax;
     testStage.apSpeed = this.apSpeed;
     testStage.ignition = this.ignition;
-    testStage.timesDict = this.timesDict;
+    testStage.timesDict = { ...this.timesDict };
     testStage.sp = this.sp;
     testStage.jewelryCountTarget = this.jewelryCountTarget;
 
@@ -250,13 +254,15 @@ export default class Stage {
     if (skill?.ap <= -testStage.apMax)
       res /= Math.ceil(
         Math.min(
-          ...testStage.te.filter((c) => c != card).map((c) => c.getCost())
+          ...testStage.te
+            .filter((c) => c != card && c.member != "jewelry")
+            .map((c) => c.getCost())
         ) / testStage.apSpeed
       );
 
     if (card.short == "上升姬芽") res *= 3 / 4;
 
-    if (drawCard) res /= (oldCost + newCost) * oldCost;
+    if (drawCard) res /= (oldCost + newCost) / oldCost;
 
     if (res < 0) return 0;
 
@@ -276,6 +282,8 @@ export default class Stage {
       this.addProtect(s.protect);
       this.subtractAp(s["ap-"]);
       this.addCard(s.cards);
+
+      this.addAp(s.spAp);
     }
   }
 

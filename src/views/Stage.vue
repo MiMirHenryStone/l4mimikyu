@@ -70,9 +70,7 @@
           :disabled="ing"
           id="sp"
           @change="
-            formData.sp.includes('2')
-              ? (formData.strategy = 'score')
-              : (formData.strategy = 'cost')
+            formData.sp.includes('2') ? (formData.strategy = 'score') : null
           "
         >
           <option value="">--</option>
@@ -103,8 +101,8 @@
       <div>
         <label for="strategy">策略: </label>
         <select v-model="formData.strategy" :disabled="ing" id="strategy">
-          <option value="cost">pt/AP优先</option>
-          <option value="score">pt优先</option>
+          <option value="cost">LOVE/AP优先</option>
+          <option value="score">LOVE优先</option>
           <!-- <option value="exCost">AP优先</option> -->
         </select>
       </div>
@@ -259,7 +257,7 @@
             <td>kol慈<br />回数</td>
             <td>💎<br />回数</td>
             <td>AP SKIP<br />回数</td>
-            <td>pt</td>
+            <td>heart</td>
             <td>%</td>
           </tr>
         </thead>
@@ -303,7 +301,7 @@
             <td>{{ dialogData.key }}</td>
           </tr>
           <tr>
-            <td>pt</td>
+            <td>heart</td>
             <td>{{ dialogData.score }}</td>
           </tr>
         </thead>
@@ -348,12 +346,12 @@ const formData = ref({
   sp: "",
   effect: "",
   jewelryCountTargetMin: 0,
-  jewelryCountTargetMax: 20,
+  jewelryCountTargetMax: 16,
   cardTimes: 373,
-  skipTimes: 100,
-  strategy: "cost",
+  skipTimes: 36,
+  strategy: "score",
 });
-const jewelryCountTarget = ref(10);
+const jewelryCountTarget = ref(0);
 
 const cards = cardList
   .map((i) => new Card(i.short))
