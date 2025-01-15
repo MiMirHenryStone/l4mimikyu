@@ -109,7 +109,7 @@
       <div>
         <label for="jewelry">LIVE TARGET💎: </label>
         <input
-          v-model="jewelryCountTarget"
+          v-model="formData.jewelryCountTarget"
           type="number"
           id="jewelry"
           @change="
@@ -350,8 +350,14 @@ const formData = ref({
   cardTimes: 373,
   skipTimes: 36,
   strategy: "score",
+  jewelryCountTarget: 0,
 });
-const jewelryCountTarget = ref(0);
+
+let localFormData = localStorage.getItem("formData");
+try {
+  if (localFormData)
+    formData.value = { ...formData, ...JSON.parse(localFormData) };
+} catch (error) {}
 
 const cards = cardList
   .map((i) => new Card(i.short))
@@ -390,6 +396,7 @@ const retire = () => {
 };
 
 const start = async (a) => {
+  localStorage.setItem("formData", JSON.stringify(formData.value));
   detailsOpen.value = false;
   ing.value = true;
   auto.value = a;
@@ -444,7 +451,7 @@ const start = async (a) => {
     ing.value = false;
   } else {
     newStage();
-    stage.value.jewelryCountTarget = jewelryCountTarget.value;
+    stage.value.jewelryCountTarget = formData.value.jewelryCountTarget;
     stage.value.start();
 
     refreshOsusume();
@@ -457,7 +464,7 @@ const sleep = async (ms) => {
 
 const osusume = ref(-1);
 const refreshOsusume = () => {
-  osusume.value = strategyPlay(stage.value, jewelryCountTarget.value);
+  osusume.value = strategyPlay(stage.value, formData.value.jewelryCountTarget);
 };
 </script>
 
