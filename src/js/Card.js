@@ -55,14 +55,18 @@ export default class Card {
     return false;
   }
 
-  onSkill(stage) {
+  getSkill(stage) {
     if (this.props?.skill) {
       if (typeof this.props.skill == "function") {
-        stage.trigger(this.props.skill(stage));
+        return this.props.skill(stage);
       } else {
-        stage.trigger(this.props.skill);
+        return this.props.skill;
       }
     }
+  }
+
+  onSkill(stage) {
+    stage.trigger(this.getSkill(stage));
   }
 
   afterSkill(stage) {
@@ -152,10 +156,10 @@ export const cardList = [
     member: 7,
     cost: 4,
     main: "dress",
-    skill: { cards: ["pa吟👗", "pa吟👗"] },
+    skill: { cards: ["pa👗", "pa👗"] },
   },
   {
-    short: "pa吟👗",
+    short: "pa👗",
     member: "dress",
     cost: 2,
     main: "ap",

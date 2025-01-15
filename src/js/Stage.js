@@ -26,6 +26,8 @@ export default class Stage {
     this.drawHeartCount = 0;
     this.jewelryCountTarget = 0;
 
+    this.hasCostEffect = false;
+
     this.testResults = [];
   }
 
@@ -44,6 +46,8 @@ export default class Stage {
       let card = this.yama.splice(index, 1)[0];
       this.te.push(card);
     }
+
+    this.hasCostEffect = ["st1a"].includes(this.effect);
 
     this.testAllCards();
   }
@@ -161,6 +165,10 @@ export default class Stage {
   }
 
   testCard(index, drawCard) {
+    let short = this.te[index].short;
+    if (short == "kol慈") return 0.01;
+    if (["ritm吟", "pa吟"].includes(short)) return -0.01;
+
     let testStage = new Stage([]);
     for (let c of this.te) testStage.te.push(c.copy());
     for (let c of this.sute) testStage.sute.push(c.copy());
@@ -180,11 +188,20 @@ export default class Stage {
       oldCost = testStage.te[index].getCost(testStage.te);
       testStage.te[index] = drawCard;
       newCost = testStage.te[index].getCost(testStage.te);
+      if (
+        testStage.sp == "mg2" ||
+        testStage.sp == "tz2" ||
+        testStage.sp == "kz2"
+      ) {
+        oldCost = 1;
+        newCost = 1;
+      }
 
       if (newCost > testStage.apMax) return 0;
     }
 
     let card = testStage.te[index];
+    let skill = card.getSkill(this);
     let isReshuffle = card.isReshuffle(testStage);
 
     card.onSkill(testStage);
@@ -199,8 +216,7 @@ export default class Stage {
     if (isReshuffle)
       res +=
         (testStage.drawHeartCount * this.teMax) /
-        (testStage.getAllCards().length +
-          (card.props?.skill?.cards?.length ?? 0));
+        (testStage.getAllCards().length + (skill?.cards?.length ?? 0));
 
     if (card.props?.drawFilters?.length == 1 && !drawCard) {
       let drawFilter = card.props?.drawFilters[0];
@@ -214,27 +230,33 @@ export default class Stage {
       );
     }
 
-    if (card.props?.skill?.cards?.length)
-      res /= card.props?.skill?.cards?.length + 1;
-
-    if (card.short == "上升姬芽") res *= 3 / 4;
-
-    if (drawCard) res /= (oldCost + newCost) * oldCost;
-
     if (card.props?.once) {
       res +=
         ((testStage.drawHeartCount - card.calcDrawHeartCount(testStage)) /
           (testStage.getAllCards().length - 1) -
           testStage.drawHeartCount / testStage.getAllCards().length) *
-        this.teMax ** 2;
+        this.teMax;
     }
-    if (card.props?.skill?.cards?.length) {
+    if (skill?.cards?.length) {
       res +=
         (testStage.drawHeartCount /
-          (testStage.getAllCards().length + card.props?.skill?.cards?.length) -
+          (testStage.getAllCards().length + skill?.cards?.length) -
           testStage.drawHeartCount / testStage.getAllCards().length) *
-        this.teMax ** 2;
+        this.teMax;
     }
+
+    if (skill?.cards?.length) res /= skill?.cards?.length + 1;
+
+    if (skill?.ap <= -testStage.apMax)
+      res /= Math.ceil(
+        Math.min(
+          ...testStage.te.filter((c) => c != card).map((c) => c.getCost())
+        ) / testStage.apSpeed
+      );
+
+    if (card.short == "上升姬芽") res *= 3 / 4;
+
+    if (drawCard) res /= (oldCost + newCost) * oldCost;
 
     if (res < 0) return 0;
 

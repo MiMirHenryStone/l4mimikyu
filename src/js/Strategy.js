@@ -1,7 +1,8 @@
 function newIndexList(stage) {
   let indexList = [];
   for (let i = 0; i < stage.te.length; i++) {
-    if (stage.te[i].getCost(stage.te) <= stage.ap) indexList.push(i);
+    if (stage.te[i].getCost(stage.te) <= stage.ap && stage.testResults[i] >= 0)
+      indexList.push(i);
   }
   return indexList;
 }
@@ -16,7 +17,7 @@ function costFilter(stage, indexList, forceNotEmpty) {
   );
   let costScoreList = indexList.map((index) => fullCostScoreList[index]);
   let max = Math.max(...costScoreList);
-  if (!forceNotEmpty && max == 0 && Math.max(...fullCostScoreList) > 0) {
+  if (!forceNotEmpty && max <= 0 && Math.max(...fullCostScoreList) > 0) {
     let min = Math.min(
       ...indexList.map((index) => stage.te[index].getCost(stage.te))
     );
@@ -77,7 +78,7 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
       (stage.sp == "mg2" || stage.sp == "tz2" || stage.sp == "kz2"
         ? "score"
         : "cost");
-    if (stage.ap + stage.apSpeed >= stage.apMax) first = "score";
+    if (stage.ap + stage.apSpeed * 2 >= stage.apMax) first = "score";
   }
 
   // ignition
@@ -133,7 +134,7 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
   if (res == undefined) {
     // jewelry over
     index = stage.te.findIndex(
-      (c) => c.member == "jewelry" && c.getCost(stage.te) == 2
+      (c) => c.member == "jewelry" && stage.hasCostEffect
     );
     if (
       index >= 0 &&

@@ -151,6 +151,19 @@
     </form>
 
     <div style="text-align: right">
+      <button
+        v-if="ing && !auto"
+        @click="
+          dialogData = {
+            key: stage.jewelryCountTarget,
+            score: stage.score,
+            cardTimesDict: stage.cardTimesDict,
+          };
+          nextTick(() => dialog.showModal());
+        "
+      >
+        LOG
+      </button>
       <button v-if="ing" @click="retire">RETIRE</button>
       <template v-else>
         <button v-if="autoResults.length" @click="autoResults = []">
@@ -281,34 +294,34 @@
           </tr>
         </tbody>
       </table>
-      <dialog v-if="dialogData" ref="dialog">
-        <table>
-          <thead>
-            <tr>
-              <td>target💎</td>
-              <td>{{ dialogData.key }}</td>
-            </tr>
-            <tr>
-              <td>pt</td>
-              <td>{{ dialogData.score }}</td>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(value, key) in dialogData.cardTimesDict">
-              <td>{{ key }}</td>
-              <td>{{ value }}回</td>
-            </tr>
-          </tbody>
-          <tfoot>
-            <tr>
-              <td colspan="2" style="text-align: center">
-                <button @click="dialogData = undefined">关闭</button>
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-      </dialog>
     </template>
+    <dialog v-if="dialogData" ref="dialog">
+      <table>
+        <thead>
+          <tr>
+            <td>target💎</td>
+            <td>{{ dialogData.key }}</td>
+          </tr>
+          <tr>
+            <td>pt</td>
+            <td>{{ dialogData.score }}</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(value, key) in dialogData.cardTimesDict">
+            <td>{{ key }}</td>
+            <td>{{ value }}回</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2" style="text-align: center">
+              <button @click="dialogData = undefined">关闭</button>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </dialog>
   </div>
 </template>
 
