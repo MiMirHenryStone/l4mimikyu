@@ -371,12 +371,17 @@ const cards = cardList
     return a.member > b.member ? 1 : a.member < b.member ? -1 : 0;
   });
 
-const deck = ref(
-  cardList
+const deck = ref([]);
+
+let localDeck = localStorage.getItem("deck");
+try {
+  if (localDeck) deck.value = JSON.parse(localDeck).map((i) => new Card(i));
+} catch (error) {}
+if (!deck.value.length)
+  deck.value = cardList
     .filter((i) => typeof i.member == "number")
     .map((i) => new Card(i.short))
-    .slice(0, 16)
-);
+    .slice(0, 16);
 
 const stage = ref();
 
@@ -399,6 +404,7 @@ const retire = () => {
 
 const start = async (a) => {
   localStorage.setItem("formData", JSON.stringify(formData.value));
+  localStorage.setItem("deck", JSON.stringify(deck.value.map((i) => i.short)));
   detailsOpen.value = false;
   ing.value = true;
   auto.value = a;

@@ -171,7 +171,7 @@ export default class Stage {
   testCard(index, drawCard) {
     let short = drawCard ? drawCard.short : this.te[index].short;
     if (short == "kol慈") return 0.01;
-    if (["ritm吟", "pa吟"].includes(short)) return -0.01;
+    if (["ritm吟", "pa吟", "花结吟"].includes(short)) return -0.01;
 
     let testStage = new Stage([]);
     for (let c of this.te) testStage.te.push(c.copy());
@@ -260,7 +260,10 @@ export default class Stage {
         ) / testStage.apSpeed
       );
 
-    if (card.short == "上升姬芽") res *= 3 / 4;
+    if (card.short == "上升姬芽") {
+      res *= 3 / 4;
+      if (this.hasCostEffect) res *= card.getCost();
+    }
 
     if (drawCard) res /= (oldCost + newCost) / oldCost;
 
