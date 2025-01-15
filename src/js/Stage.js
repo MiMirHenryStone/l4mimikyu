@@ -163,6 +163,8 @@ export default class Stage {
     }
     cards.forEach((c) => {
       n += c.calcDrawHeartCount(this);
+      if (!this.te.includes(c) && c.getCalcCost(this) >= this.apMax)
+        n += c.getSkill(this)?.heart ?? 0;
     });
     this.drawHeartCount = n;
     return n;
