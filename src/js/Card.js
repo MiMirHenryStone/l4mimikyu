@@ -882,7 +882,7 @@ export const cardList = [
   {
     short: "db铃",
     member: 8,
-    cost: 1,
+    cost: 5,
     main: "heart",
     skill: { heart: 1 },
     afterSkill(stage, self) {
