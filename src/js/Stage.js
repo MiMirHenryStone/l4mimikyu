@@ -93,6 +93,9 @@ export default class Stage {
     let card = this.te[index];
     if (!this.cardTimesDict[card.short]) this.cardTimesDict[card.short] = 0;
     this.cardTimesDict[card.short]++;
+
+    // ignition variable
+    let main = card.getMain(this);
     let isReshuffle = card.isReshuffle(this);
 
     if (this.sp != "kz2") {
@@ -101,9 +104,20 @@ export default class Stage {
 
     card.cost = card.props.cost;
 
+    // skill -> cross -> draw/reshuffle -> afterSkill
+
     card.onSkill(this);
+
+    if (this.ignition && card.props?.ignitionTimes) {
+      this.timesDict[card.short]++;
+      if (this.timesDict[card.short] >= card.props?.ignitionTimes) {
+        this.ignition = false;
+        this.timesDict[card.short] = undefined;
+      }
+    }
+
     for (let c of this.te) {
-      c.onCross(this, card);
+      c.onCross(this, card, main);
     }
     if (this.sp == "sy") this.score++;
 
@@ -204,11 +218,12 @@ export default class Stage {
 
     let card = testStage.te[index];
     let skill = card.getSkill(this);
+    let main = card.getMain(this);
     let isReshuffle = card.isReshuffle(testStage);
 
     card.onSkill(testStage);
     for (let c of testStage.te) {
-      c.onCross(testStage, card);
+      c.onCross(testStage, card, main);
     }
 
     testStage.calcTestDrawHeartCount();

@@ -1,7 +1,10 @@
 <template>
   <div>
     <template v-if="!ing || auto">
-      <h2>DECK</h2>
+      <h2>
+        DECK
+        <button @click="deck = sortCardList(deck)">⇅</button>
+      </h2>
       <hr />
       <div class="grid">
         <card-item
@@ -127,7 +130,7 @@
           id="jewelry"
           @change="
             if (ing && !auto) {
-              stage.jewelryCountTarget = jewelryCountTarget;
+              stage.jewelryCountTarget = formData.jewelryCountTarget;
               stage.testAllCards();
               refreshOsusume();
             }
@@ -373,15 +376,25 @@ try {
     formData.value = { ...formData.value, ...JSON.parse(localFormData) };
 } catch (error) {}
 
-const cards = cardList
-  .map((i) => new Card(i.short))
-  .sort((a, b) => {
-    if (typeof a.member == "number" && typeof b.member == "number")
-      return a.member - b.member;
-    if (typeof a.member == "number" && typeof b.member != "number") return -1;
-    if (typeof a.member != "number" && typeof b.member == "number") return 1;
-    return a.member > b.member ? 1 : a.member < b.member ? -1 : 0;
-  });
+const sortCardList = (cardList) => {
+  return cardList
+    .slice()
+    .sort((a, b) => {
+      if (typeof a.member == "number" && typeof b.member == "number")
+        return a.member - b.member;
+      if (typeof a.member == "number" && typeof b.member != "number") return -1;
+      if (typeof a.member != "number" && typeof b.member == "number") return 1;
+      return a.member > b.member ? 1 : a.member < b.member ? -1 : 0;
+    })
+    .sort((a, b) => {
+      if (a.year && b.year) return b.year - a.year;
+      if (a.year && !b.year) return -1;
+      if (!a.year && b.year) return 1;
+      return 0;
+    });
+};
+
+const cards = sortCardList(cardList.map((i) => new Card(i.short)));
 
 const deck = ref([]);
 
@@ -514,6 +527,10 @@ table {
 }
 h2 {
   margin-bottom: 0;
+  button {
+    margin: 0;
+    vertical-align: middle;
+  }
 }
 summary {
   font-size: 1.5em;
