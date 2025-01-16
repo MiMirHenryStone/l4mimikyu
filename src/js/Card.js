@@ -217,10 +217,10 @@ export const cardList = [
     ignitionTimes: 3,
     // afterSkill(stage) {
     //   if (stage.ignition) {
-    //     stage.timesDict[this.short]++;
-    //     if (stage.timesDict[this.short] >= 3) {
+    //     stage.ignitionTimesDict[this.short]++;
+    //     if (stage.ignitionTimesDict[this.short] >= 3) {
     //       stage.ignition = false;
-    //       stage.timesDict[this.short] = undefined;
+    //       stage.ignitionTimesDict[this.short] = undefined;
     //     }
     //   }
     // },
@@ -229,8 +229,6 @@ export const cardList = [
         if (main == "mental" || main == "protect") {
           stage.ignition = true;
         }
-        if (stage.timesDict[this.short] == undefined)
-          stage.timesDict[this.short] = 0;
       }
     },
   },

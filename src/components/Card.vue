@@ -43,10 +43,10 @@
       }}
     </div>
     <div
-      v-if="props.stage?.timesDict[props.card.short] != undefined"
+      v-if="props.stage?.ignition && props.card?.props?.ignitionTimes"
       class="time"
     >
-      {{ props.stage?.timesDict[props.card.short] }}
+      {{ props.stage?.ignitionTimesDict[props.card.short] ?? 0 }}
     </div>
   </div>
 </template>

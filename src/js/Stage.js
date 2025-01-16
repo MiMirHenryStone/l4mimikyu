@@ -10,7 +10,7 @@ export default class Stage {
     this.protect = false;
     this.apMax = 20;
     this.ignition = false;
-    this.timesDict = {};
+    this.ignitionTimesDict = {};
     this.cardTimesDict = { apSkip: 0 };
 
     this.timesCount = 0;
@@ -20,7 +20,7 @@ export default class Stage {
     this.effect = "";
 
     this.teMax = 8;
-    this.ap = 8;
+    this.ap = 0;
     this.apSpeed = 2.5;
 
     this.drawHeartCount = 0;
@@ -110,10 +110,12 @@ export default class Stage {
     card.onSkill(this);
 
     if (this.ignition && card.props?.ignitionTimes) {
-      this.timesDict[card.short]++;
-      if (this.timesDict[card.short] >= card.props?.ignitionTimes) {
+      if (this.ignitionTimesDict[card.short] == undefined)
+        this.ignitionTimesDict[card.short] = 0;
+      this.ignitionTimesDict[card.short]++;
+      if (this.ignitionTimesDict[card.short] >= card.props?.ignitionTimes) {
         this.ignition = false;
-        this.timesDict[card.short] = undefined;
+        this.ignitionTimesDict[card.short] = 0;
       }
     }
 
@@ -208,7 +210,7 @@ export default class Stage {
     testStage.apMax = this.apMax;
     testStage.apSpeed = this.apSpeed;
     testStage.ignition = this.ignition;
-    testStage.timesDict = { ...this.timesDict };
+    testStage.ignitionTimesDict = { ...this.ignitionTimesDict };
     testStage.sp = this.sp;
     testStage.jewelryCountTarget = this.jewelryCountTarget;
 
