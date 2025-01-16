@@ -195,6 +195,7 @@ export default class Stage {
   testCard(index, drawCard) {
     let short = drawCard ? drawCard.short : this.te[index].short;
     if (short == "kol慈") return 0.01;
+    if (short == "💎") return 0;
     if (["ritm吟", "pa吟", "花结吟"].includes(short)) return -0.01;
 
     let testStage = new Stage([]);
