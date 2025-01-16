@@ -360,7 +360,7 @@ export const cardList = [
     cost: 9,
     main: "protect",
     skill(stage) {
-      let res = { protect: 1, heart: 10, ap: -apMax };
+      let res = { protect: 1, heart: 10, ap: -Infinity };
       if (stage.sp == "mg2") {
         res.heart = 9;
         res.spAp = 17 - 2;
@@ -483,6 +483,26 @@ export const cardList = [
     draw: { mental: 1 },
   },
   {
+    short: "水母梢",
+    member: 3,
+    cost: 5,
+    main: "love+",
+    draw: { cards: ["⚪"] },
+  },
+  {
+    short: "⚪",
+    member: "bubble",
+    cost: 1,
+    main: "ap-",
+    once: true,
+    skill: {
+      "ap-": [
+        { unit: "srb", cost: -3 },
+        { member: "dress", cost: -3 },
+      ],
+    },
+  },
+  {
     short: "ss缀",
     member: 4,
     cost: 5 - 2,
@@ -540,7 +560,7 @@ export const cardList = [
     cost: 9,
     main: "voltage",
     skill(stage) {
-      let res = { voltage: 2, heart: 10, ap: -apMax };
+      let res = { voltage: 2, heart: 10, ap: -Infinity };
       if (stage.sp == "tz") res.heart = 9;
       if (stage.sp == "tz2") res.spAp = 20;
       return res;

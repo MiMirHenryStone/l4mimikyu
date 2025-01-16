@@ -58,6 +58,7 @@ export default class Stage {
       this.sute = [];
 
       if (this.effect == "kj1a") {
+        this.addAp(3);
         this.yama.forEach((c) => {
           if (c.getMain(this) == "reshuffle") c.cost++;
         });
@@ -150,11 +151,22 @@ export default class Stage {
     this.timesCount++;
     this.cardsCount++;
 
-    if (this.effect == "kj1b" && this.cardsCount % 5 == 0) {
+    if (this.effect == "gc1a" && this.cardsCount % 30 == 0) {
+      this.getAllCards().forEach((c) => {
+        if (c.getMain() == "mental") c.costDelta--;
+      });
+    } else if (this.effect == "gc1b" && this.cardsCount % 15 == 0) {
+      this.getAllCards().forEach((c) => {
+        if (c.unit == "srb") c.costDelta--;
+      });
+    } else if (this.effect == "gc1c" && this.cardsCount % 20 == 0) {
+      this.getAllCards().forEach((c) => {
+        if (c.unit == "drk") c.costDelta--;
+      });
+    } else if (this.effect == "kj1b" && this.cardsCount % 5 == 0) {
       this.sute.push(...this.te.splice(0));
       for (let i = 0; i < this.teMax; i++) this.draw(i);
-    }
-    if (this.effect == "st1a" && this.cardsCount % 6 == 0) {
+    } else if (this.effect == "st1a" && this.cardsCount % 6 == 0) {
       this.getAllCards().forEach((c) => c.cost++);
     }
 
@@ -252,7 +264,7 @@ export default class Stage {
         ((testStage.drawHeartCount - card.calcDrawHeartCount(testStage)) /
           (testStage.getAllCards().length - 1) -
           testStage.drawHeartCount / testStage.getAllCards().length) *
-        this.teMax;
+        (isReshuffle ? this.teMax : this.teMax ** 3);
     }
     if (skill?.cards?.length) {
       res +=

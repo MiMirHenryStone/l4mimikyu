@@ -78,6 +78,15 @@
         />
       </div>
       <div>
+        <label for="ap-max">最大AP: </label>
+        <input
+          v-model="formData.apMax"
+          :disabled="ing"
+          type="number"
+          id="ap-max"
+        />
+      </div>
+      <div>
         <label for="sp">SP: </label>
         <select
           v-model="formData.sp"
@@ -102,15 +111,24 @@
         <select v-model="formData.effect" :disabled="ing" id="effect">
           <option value="">--</option>
           <option value="st1a">
-            (2025年1月公会战A) skill6回使用 deck全card消费AP+1
+            (2025/01 公会战A) skill6回使用 deck全card消费AP+1
           </option>
           <option value="kj1a">
-            (2025年1月个人战A) 山札切
-            <!-- AP3回复 -->
+            (2025/01 个人战A) 山札切 AP3回复
             main效果reshuffle效果deck全card消费AP+1
           </option>
           <option value="kj1b">
-            (2025年1月个人战B) skill5回使用 手札全捨 山札手札上限引直
+            (2025/01 个人战B) skill5回使用 手札全捨 山札手札上限引直
+          </option>
+          <option value="gc1a">
+            (2025/01 GC A) skill30回使用
+            main效果mental回复deck全card消费APstage中常-1
+          </option>
+          <option value="gc1b">
+            (2025/01 GC B) skill15回使用 deck全スリブcard消费APstage中常-1
+          </option>
+          <option value="gc1c">
+            (2025/01 GC C) skill20回使用 deck全ドルケcard消费APstage中常-1
           </option>
         </select>
       </div>
@@ -360,6 +378,7 @@ const formData = ref({
   sh: 3.3,
   deckLength: 17,
   apSpeed: 2.34,
+  apMax: 20,
   sp: "",
   effect: "",
   jewelryCountTargetMin: 0,
@@ -415,6 +434,7 @@ window.getStage = () => stage.value;
 const newStage = () => {
   stage.value = new Stage([]);
   stage.value.apSpeed = Number(formData.value.apSpeed);
+  stage.value.apMax = Number(formData.value.apMax);
   stage.value.sp = formData.value.sp;
   stage.value.effect = formData.value.effect;
   stage.value.strategy = formData.value.strategy;

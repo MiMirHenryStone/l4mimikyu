@@ -85,6 +85,8 @@ const memberColorDict = {
   7: "#a2d7dd",
   8: "#fad764",
   9: "#9d8de2",
+  bubble: "#555555",
+  jewelry: "#555555",
 };
 </script>
 

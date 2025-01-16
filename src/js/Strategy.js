@@ -82,7 +82,8 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
       (stage.sp == "mg2" || stage.sp == "tz2" || stage.sp == "kz2"
         ? "score"
         : "cost");
-    if (stage.ap + stage.apSpeed * 2 >= stage.apMax) first = "score";
+    if (stage.ap + stage.apSpeed * (stage.apMax / 10) >= stage.apMax)
+      first = "score";
   }
 
   // ignition
@@ -130,7 +131,7 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
       stage.te[index].getCost(stage.te) <
         (first == "score"
           ? stage.ap - stage.apSpeed
-          : stage.ap - stage.apSpeed * 2)
+          : stage.ap - stage.apSpeed * (stage.apMax / 10))
     ) {
       res = index;
     }
