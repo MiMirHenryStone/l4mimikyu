@@ -128,7 +128,9 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
       stage.getAllCards().filter((c) => c.member == "jewelry").length <
         jewelryCountTarget &&
       stage.te[index].getCost(stage.te) <
-        (first == "score" ? stage.ap : stage.ap + stage.apSpeed * 2)
+        (first == "score"
+          ? stage.ap - stage.apSpeed
+          : stage.ap - stage.apSpeed * 2)
     ) {
       res = index;
     }
