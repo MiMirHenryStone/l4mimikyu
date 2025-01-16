@@ -146,9 +146,7 @@ export default class Stage {
 
     if (!this.protect && this.sp != "mg2") this.mental = false;
 
-    if (this.sp != "kz2") {
-      this.autoAp();
-    }
+    this.autoAp();
 
     this.testAllCards();
   }
@@ -265,7 +263,7 @@ export default class Stage {
       if (this.hasCostEffect) res *= card.getCost();
     }
 
-    if (drawCard) res /= (oldCost + newCost) / oldCost;
+    if (drawCard) res /= Math.max(2, (oldCost + newCost) / oldCost);
 
     if (res < 0) return 0;
 
@@ -299,6 +297,8 @@ export default class Stage {
     if (t) {
       if (this.sp == "tz") {
         this.score += t;
+      }
+      if (this.sp == "tz2") {
         this.addAp(1 * t);
       }
     }
