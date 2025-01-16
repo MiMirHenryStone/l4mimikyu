@@ -113,10 +113,13 @@ export default class Card {
     if (stage.sp == "mg2") n += (draw?.mental || 0) + (draw?.protect || 0);
 
     if (!stage.te.includes(this) && this.getCalcCost(stage) >= stage.apMax) {
+      let m = 0;
       let skill = this.getSkill(stage);
-      n += skill.heart || 0;
-      if (stage.sp == "tz") n += skill?.voltage || 0;
-      if (stage.sp == "mg2") n += (skill?.mental || 0) + (skill?.protect || 0);
+      m += skill.heart || 0;
+      if (stage.sp == "tz") m += skill?.voltage || 0;
+      if (stage.sp == "mg2") m += (skill?.mental || 0) + (skill?.protect || 0);
+      let turn = stage.getAllCards().length / stage.teMax;
+      n += (m / (turn + 1)) * turn;
     }
     return n;
   }

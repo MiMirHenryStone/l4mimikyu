@@ -38,10 +38,21 @@
         <label for="qc">生化值: </label>
         <input v-model="formData.sh" type="text" :disabled="ing" id="sh" />
         &nbsp;
+        <label for="deckLength">卡组牌数: </label>
+        <input
+          v-model="formData.deckLength"
+          type="number"
+          :disabled="ing"
+          id="deckLength"
+        />
+        &nbsp;
         <button
           @click="
             formData.apSpeed = Number(
-              (1200 / formData.qc / formData.sh).toFixed(2)
+              (
+                (1200 / formData.qc / formData.sh) *
+                (1 - 0.1 * Math.min(9, 18 - formData.deckLength))
+              ).toFixed(2)
             );
             formData.cardTimes = Math.floor((formData.qc * 8) / 3);
           "
@@ -344,7 +355,8 @@ const dialogData = ref();
 const formData = ref({
   qc: 140,
   sh: 3.3,
-  apSpeed: 2.6,
+  deckLength: 17,
+  apSpeed: 2.34,
   sp: "",
   effect: "",
   jewelryCountTargetMin: 0,
