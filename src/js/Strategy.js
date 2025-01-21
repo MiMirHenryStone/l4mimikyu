@@ -17,14 +17,14 @@ function costFilter(stage, indexList, forceNotEmpty) {
   );
   let costScoreList = indexList.map((index) => fullCostScoreList[index]);
   let max = Math.max(...costScoreList);
+  let m = (Math.min(...costScoreList) + max) / 2;
   if (!forceNotEmpty && max <= 0 && Math.max(...fullCostScoreList) > 0) {
+    let mList = indexList.filter((index) => costScoreList[index] >= m);
     let min = Math.min(
-      ...indexList.map((index) => stage.te[index].getCost(stage.te))
+      ...mList.map((index) => stage.te[index].getCost(stage.te))
     );
     if (min <= stage.apSpeed)
-      return indexList.filter(
-        (index) => stage.te[index].getCost(stage.te) == min
-      );
+      return mList.filter((index) => stage.te[index].getCost(stage.te) == min);
     else return [];
   } else return indexList.filter((index, i) => costScoreList[i] == max);
 }

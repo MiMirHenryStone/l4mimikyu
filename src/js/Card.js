@@ -112,14 +112,14 @@ export default class Card {
     if (stage.sp == "tz") n += draw?.voltage || 0;
     if (stage.sp == "mg2") n += (draw?.mental || 0) + (draw?.protect || 0);
 
-    if (!stage.te.includes(this) && this.getCalcCost(stage) >= stage.apMax) {
-      let m = 0;
-      let skill = this.getSkill(stage);
+    let m = 0;
+    let skill = this.getSkill(stage);
+    if (skill?.ap < 0) {
       m += skill.heart || 0;
       if (stage.sp == "tz") m += skill?.voltage || 0;
       if (stage.sp == "mg2") m += (skill?.mental || 0) + (skill?.protect || 0);
       let turn = stage.getAllCards().length / stage.teMax;
-      n += (m / (turn + 1)) * turn;
+      n += m;
     }
     return n;
   }
@@ -481,6 +481,23 @@ export const cardList = [
     draw: { mental: 1 },
   },
   {
+    short: "蓝远梢",
+    member: 3,
+    cost: 3,
+    main: "dress",
+    skill: { cards: ["蓝远梢👗"] },
+    cross(stage, card) {
+      if (card.unit == "srb") stage.trigger({ voltage: 1 });
+    },
+  },
+  {
+    short: "蓝远梢👗",
+    member: "dress",
+    cost: 3,
+    main: "love+",
+    once: true,
+  },
+  {
     short: "水母梢",
     member: 3,
     cost: 5,
@@ -667,6 +684,24 @@ export const cardList = [
     main: "mental",
     skill: { mental: 1, voltage: 1 },
     draw: { mental: 1, heart: 1 },
+  },
+  {
+    short: "蓝远花帆",
+    member: 1,
+    cost: 3,
+    main: "dress",
+    skill: { cards: ["蓝远花帆👗"] },
+    cross(stage, card) {
+      if (card.unit == "srb") stage.trigger({ voltage: 1 });
+    },
+  },
+  {
+    short: "蓝远花帆👗",
+    member: "dress",
+    cost: 3,
+    main: "heart",
+    once: true,
+    skill: { heart: 1 },
   },
   {
     short: "雨伞沙耶",

@@ -29,6 +29,8 @@ export default class Stage {
     this.hasCostEffect = false;
 
     this.testResults = [];
+
+    this.hasIgnitionAndScoreCard = false;
   }
 
   getAllCards() {
@@ -40,6 +42,13 @@ export default class Stage {
   }
 
   start() {
+    this.ap = this.apSpeed;
+    this.hasIgnitionAndScoreCard =
+      this.getAllCards().filter(
+        (c) =>
+          (c.props?.main == "mental" || c.props?.main == "protect") &&
+          (c.isReshuffle(this) || c.getSkill(this)?.ap < 0)
+      ).length > 0;
     if (this.sp == "kz2") this.ap = Infinity;
     for (let i = 0; i < this.teMax; i++) {
       let index = Math.floor(Math.random() * this.yama.length);
@@ -194,11 +203,46 @@ export default class Stage {
     return n;
   }
 
+  calcNextDrawHeartCount(card) {
+    let m = 0,
+      n = 0,
+      yama = [],
+      sute = [];
+    let allCards = this.getAllCards();
+    yama = card.props?.yamaReshuffle
+      ? allCards.filter((c) => c != card)
+      : this.yama;
+    yama.forEach((c) => {
+      m += c.calcDrawHeartCount(this);
+    });
+    if (yama.length < this.teMax) {
+      sute = [...this.sute, ...this.te.filter((c) => c != card)];
+      sute.forEach((c) => (n += c.calcDrawHeartCount(this)));
+      return (
+        ((m + (n / sute.length) * (this.teMax - yama.length)) /
+          allCards.length) *
+          Math.min(allCards.length, this.teMax * 2) +
+        (((this.drawHeartCount * this.teMax) / allCards.length) *
+          Math.max(0, allCards.length - this.teMax * 2)) /
+          allCards.length
+      );
+    } else {
+      return (
+        (((m / yama.length) * this.teMax) / allCards.length) *
+          Math.min(allCards.length, this.teMax * 2) +
+        (((this.drawHeartCount * this.teMax) / allCards.length) *
+          Math.max(0, allCards.length - this.teMax * 2)) /
+          allCards.length
+      );
+    }
+  }
+
   testCard(index, drawCard) {
     let short = drawCard ? drawCard.short : this.te[index].short;
     if (short == "kol慈") return 0.01;
     if (short == "💎") return 0;
-    if (["ritm吟", "pa吟", "花结吟"].includes(short)) return -0.01;
+    if (["ritm吟", "蓝远梢", "蓝远花帆", "pa吟", "花结吟"].includes(short))
+      return -0.01;
 
     let testStage = new Stage([]);
     for (let c of this.te) testStage.te.push(c.copy());
@@ -245,10 +289,7 @@ export default class Stage {
 
     let res = testStage.score;
 
-    if (isReshuffle)
-      res +=
-        (testStage.drawHeartCount * this.teMax) /
-        (testStage.getAllCards().length + (skill?.cards?.length ?? 0));
+    if (isReshuffle) res += testStage.calcNextDrawHeartCount(card);
 
     if (card.props?.drawFilters?.length == 1 && !drawCard) {
       let drawFilter = card.props?.drawFilters[0];
@@ -289,7 +330,7 @@ export default class Stage {
       );
 
     if (card.short == "上升姬芽") {
-      res *= 3 / 4;
+      if (!this.hasIgnitionAndScoreCard) res *= 3 / 4;
       if (this.hasCostEffect) res *= card.getCost();
     }
 
