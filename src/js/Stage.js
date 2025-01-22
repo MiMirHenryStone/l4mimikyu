@@ -110,7 +110,7 @@ export default class Stage {
       return;
     }
 
-    this.usingCard = true;
+    this.usingCard = { heart: false };
 
     let card = this.te[index];
     if (!this.cardTimesDict[card.short]) this.cardTimesDict[card.short] = 0;
@@ -126,6 +126,8 @@ export default class Stage {
 
     card.onSkill(this);
 
+    if (this.sp == "sy") this.trigger({ heart: [{}] });
+
     if (this.ignition && card.props?.ignitionTimes) {
       if (this.ignitionTimesDict[card.short] == undefined)
         this.ignitionTimesDict[card.short] = 0;
@@ -139,7 +141,6 @@ export default class Stage {
     for (let c of this.te) {
       c.onCross(this, card, card.getMain(this));
     }
-    if (this.sp == "sy") this.score++;
 
     card.afterSkill(this);
 
@@ -151,8 +152,6 @@ export default class Stage {
     if (card.props?.once) card.toOut = true;
 
     if (!extra2) {
-      this.usingCard = false;
-
       if (card.isReshuffle(this)) {
         for (let i in this.te) {
           if (i != index) {
@@ -168,6 +167,7 @@ export default class Stage {
         this.draw(index, card.props?.drawFilters?.[0]);
       }
 
+      this.usingCard = false;
       for (let i = 0; i < this.ignitionChangeQueue.length; i++) {
         this.trigger({ ignition: this.ignitionChangeQueue.shift() });
       }
@@ -270,7 +270,7 @@ export default class Stage {
       return -0.01;
 
     let testStage = new Stage([]);
-    testStage.usingCard = true;
+    testStage.usingCard = { heart: false };
     for (let c of this.te) testStage.te.push(c.copy());
     for (let c of this.sute) testStage.sute.push(c.copy());
     for (let c of this.yama) testStage.yama.push(c.copy());
@@ -388,52 +388,60 @@ export default class Stage {
 
   trigger(s) {
     if (s) {
-      this.addAp(s.ap);
-      this.addHeart(s.heart);
-      this.addVoltage(s.voltage);
-      this.addMental(s.mental);
-      this.addProtect(s.protect);
-      this.subtractAp(s["ap-"]);
-      this.addCard(s.cards);
-      this.ensemble(s.ensemble);
+      for (let key in s) {
+        let value = s[key];
 
-      this.changeIgnition(s.ignition);
+        if (key == "ap") this.addAp(value);
+        if (key == "heart") this.addHeart(value);
+        if (key == "voltage") this.addVoltage(value);
+        if (key == "mental") this.addMental(value);
+        if (key == "protect") this.addProtect(value);
+        if (key == "ap-") this.subtractAp(value);
+        if (key == "cards") this.addCard(value);
+        if (key == "ensemble") this.ensemble(value);
 
-      this.addAp(s.spAp);
+        if (key == "ignition") this.changeIgnition(value);
+
+        if (key == "spAp") this.addAp(value);
+      }
     }
   }
 
   addHeart(t) {
-    if (t) {
-      this.score += t;
+    if (t?.length) {
+      if (!this.usingCard) debugger;
+      if (!this.usingCard.heart && t[0].over) this.score++;
+      this.score += t.length;
+      this.usingCard.heart = true;
     }
   }
   addVoltage(t) {
-    if (t) {
+    if (t?.length) {
       if (this.sp == "tz") {
-        this.score += t;
+        this.addHeart(t);
       }
       if (this.sp == "tz2") {
-        this.addAp(1 * t);
+        t.forEach((i) => this.addAp(i.spAp ?? 1));
       }
     }
   }
   addMental(t) {
-    if (t) {
-      if (t > 0 && this.sp == "mg2") {
-        this.score += t;
-        this.addAp(1 * t);
-      }
-
-      if (t > 0) this.mental = true;
-      else if (t < 0 && this.sp != "mg2") this.mental = false;
+    if (t?.length) {
+      t.forEach((i) => {
+        if (!i.minus && this.sp == "mg2") {
+          this.addHeart([i]);
+          this.addAp(i.spAp ?? 1);
+        }
+        if (i.minus && this.sp != "mg2") this.mental = false;
+        else this.mental = true;
+      });
     }
   }
   addProtect(t) {
-    if (t) {
+    if (t?.length) {
       if (this.sp == "mg2") {
-        this.score += t;
-        this.addAp(2 * t);
+        this.addHeart(t);
+        t.forEach((i) => this.addAp(i.spAp ?? 2));
       }
       this.protect = true;
     }

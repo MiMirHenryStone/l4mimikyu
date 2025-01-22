@@ -109,16 +109,18 @@ export default class Card {
       if (typeof this.props?.draw == "function") draw = this.props?.draw(stage);
       else draw = this.props?.draw;
     }
-    n += draw?.heart || 0;
-    if (stage.sp == "tz") n += draw?.voltage || 0;
-    if (stage.sp == "mg2") n += (draw?.mental || 0) + (draw?.protect || 0);
+    n += draw?.heart?.length || 0;
+    if (stage.sp == "tz") n += draw?.voltage?.length || 0;
+    if (stage.sp == "mg2")
+      n += (draw?.mental?.length || 0) + (draw?.protect?.length || 0);
 
     let m = 0;
     let skill = this.getSkill(stage);
     if (skill?.ap < 0) {
-      m += skill.heart || 0;
-      if (stage.sp == "tz") m += skill?.voltage || 0;
-      if (stage.sp == "mg2") m += (skill?.mental || 0) + (skill?.protect || 0);
+      m += skill.heart?.length || 0;
+      if (stage.sp == "tz") m += skill?.voltage?.length || 0;
+      if (stage.sp == "mg2")
+        m += (skill?.mental?.length || 0) + (skill?.protect?.length || 0);
       let turn = stage.getAllCards().length / stage.teMax;
       n += (m * turn) / (turn + stage.scoreCardCount);
     }
@@ -175,7 +177,7 @@ export const cardList = [
     main: "reshuffle",
     reshuffle: true,
     once: true,
-    skill: { mental: 1, voltage: 1 },
+    skill: { mental: [{}], voltage: [{}] },
   },
   {
     short: "pa吟",
@@ -196,11 +198,7 @@ export const cardList = [
     member: 8,
     cost: 9,
     main: "voltage",
-    skill(stage) {
-      let res = { voltage: 1, mental: -1 };
-      if (stage.sp == "tz2") res.spAp = 6 - 1;
-      return res;
-    },
+    skill: { voltage: [{ over: true, spAp: 6 }], mental: [{ minus: true }] },
     drawFilters: [{ member: 9 }],
   },
   {
@@ -213,7 +211,7 @@ export const cardList = [
     },
     reshuffle: (stage) => stage?.ignition,
     skill(stage) {
-      let res = { mental: 1, protect: 1 };
+      let res = { mental: [{}], protect: [{}] };
       if (stage.ignition) {
         res["ap-"] = [{ unit: "mrp", cost: -3 }];
       }
@@ -234,7 +232,7 @@ export const cardList = [
     cost: 4,
     main: "reshuffle",
     reshuffle: true,
-    skill: { protect: 1 },
+    skill: { protect: [{}] },
   },
   {
     short: "织姬花帆",
@@ -242,7 +240,7 @@ export const cardList = [
     cost: 4,
     main: "reshuffle",
     reshuffle: true,
-    skill: { mental: 1 },
+    skill: { mental: [{}] },
   },
   {
     short: "音击花帆",
@@ -251,19 +249,15 @@ export const cardList = [
     main: "heart",
     reshuffle: true,
     yamaReshuffle: true,
-    skill: { heart: 3 },
-    draw: { heart: 1, mental: 1 },
+    skill: { heart: [{}, {}, {}] },
+    draw: { heart: [{}], mental: [{}] },
   },
   {
     short: "lttf沙耶",
     member: 2,
     cost: 5,
     main: "voltage",
-    skill(stage) {
-      let res = { voltage: 1 };
-      if (stage.sp == "tz2") res.spAp = 3 - 1;
-      return res;
-    },
+    skill: { voltage: [{ spAp: 3 }] },
     drawFilters: [{ member: 6 }],
   },
   {
@@ -272,8 +266,8 @@ export const cardList = [
     cost: 4,
     main: "reshuffle",
     reshuffle: true,
-    skill: { voltage: 1 },
-    draw: { heart: 1 },
+    skill: { voltage: [{}] },
+    draw: { heart: [{}] },
   },
   {
     short: "蛋糕瑠璃",
@@ -281,8 +275,8 @@ export const cardList = [
     cost: 4,
     main: "reshuffle",
     reshuffle: true,
-    skill: { heart: 1 },
-    draw: { heart: 1 },
+    skill: { heart: [{}] },
+    draw: { heart: [{}] },
   },
   {
     short: "花结梢",
@@ -308,7 +302,7 @@ export const cardList = [
     },
     cross(stage, card, main, self) {
       if (card.unit == "srb") {
-        stage.trigger({ heart: 1 });
+        stage.trigger({ heart: [{}] });
         self.teCostDelta -= 3;
       }
     },
@@ -318,14 +312,10 @@ export const cardList = [
     member: 3,
     cost: 9,
     main: "mental",
-    skill(stage) {
-      let res = { mental: 1, heart: 1 };
-      if (stage.sp == "mg2") res.spAp = 5 - 1;
-      return res;
-    },
+    skill: { mental: [{ spAp: 5 }], heart: [{}] },
     draw: { "ap-": [{ member: 6, cost: -9 }] },
     cross(stage, card) {
-      if (card.member == 6) stage.trigger({ protect: 1, heart: 1 });
+      if (card.member == 6) stage.trigger({ protect: [{}], heart: [{}] });
     },
   },
   {
@@ -333,14 +323,10 @@ export const cardList = [
     member: 4,
     cost: 10 - 8,
     main: "mental",
-    skill(stage) {
-      let res = { mental: 1, heart: 1 };
-      if (stage.sp == "mg2") res.spAp = 6 - 1;
-      return res;
-    },
+    skill: { mental: [{ spAp: 6 }], heart: [{}] },
     draw(stage) {
       let res = {};
-      if (stage.mental) res = { heart: 1 };
+      if (stage.mental) res = { heart: [{}] };
       return res;
     },
   },
@@ -349,7 +335,7 @@ export const cardList = [
     member: 4,
     cost: 3,
     main: "voltage",
-    skill: { voltage: 1, heart: 1 },
+    skill: { voltage: [{}], heart: [{}] },
     draw: {
       "ap-": [
         { member: 3, cost: -3 },
@@ -357,7 +343,7 @@ export const cardList = [
       ],
     },
     cross(stage, card) {
-      if (card.member == 6) stage.trigger({ voltage: 1, heart: 1 });
+      if (card.member == 6) stage.trigger({ voltage: [{}], heart: [{}] });
     },
   },
   {
@@ -365,12 +351,10 @@ export const cardList = [
     member: 6,
     cost: 9,
     main: "protect",
-    skill(stage) {
-      let res = { protect: 1, heart: 9, ap: -Infinity }; // dada
-      if (stage.sp == "mg2") {
-        res.spAp = 17 - 2;
-      }
-      return res;
+    skill: {
+      protect: [{ spAp: 17 }],
+      heart: [{ over: true }, {}, {}, {}, {}, {}, {}, {}, {}],
+      ap: -Infinity,
     },
   },
   {
@@ -378,7 +362,7 @@ export const cardList = [
     member: 6,
     cost: 39,
     main: "heart",
-    skill: { heart: 1, cards: ["💎"] }, // dada
+    skill: { heart: [{ over: true }], cards: ["💎"] },
     cross(stage, card, main, self) {
       if (
         card.member == 1 ||
@@ -400,18 +384,14 @@ export const cardList = [
     main: "ap-",
     once: true,
     skill: { "ap-": [{ cost: -1 }] },
-    draw: { heart: 1, voltage: 1, protect: 1 },
+    draw: { heart: [{}], voltage: [{}], protect: [{}] },
   },
   {
     short: "舞会缀",
     member: 4,
     cost: 7 - 5,
     main: "voltage",
-    skill(stage) {
-      let res = { voltage: 1 };
-      if (stage.sp == "tz2") res.spAp = 5 - 1;
-      return res;
-    },
+    skill: { voltage: [{ spAp: 5 }] },
   },
   {
     short: "舞会沙耶",
@@ -424,18 +404,14 @@ export const cardList = [
   //   member: 3,
   //   cost: 5 + 15,
   //   main: "heart",
-  //   skill: { heart: 1 }, // dada
+  //   skill: { heart: [{ over: true }] },
   // },
   {
     short: "银河缀",
     member: 4,
     cost: 5 - 3,
     main: "voltage",
-    skill(stage) {
-      let res = { voltage: 1, heart: 1 };
-      if (stage.sp == "tz2") res.spAp = 6 - 1;
-      return res;
-    },
+    skill: { voltage: [{ spAp: 6 }], heart: [{}] },
   },
   {
     short: "银河慈",
@@ -443,49 +419,40 @@ export const cardList = [
     cost: 5,
     main: "reshuffle",
     reshuffle: true,
-    skill(stage) {
-      let res = { mental: 1, protect: 1 }; // dada
-      if (stage.sp == "mg2") res.spAp = 20;
-      return res;
-    },
+    skill: { mental: [{ over: true, spAp: 21 }], protect: [{ spAp: 10 }] },
   },
   {
     short: "讴歌梢",
     member: 3,
     cost: 5 - 2,
     main: "love+",
-    draw: { heart: 1 },
+    draw: { heart: [{}] },
   },
   {
     short: "ritm梢",
     member: 3,
     cost: 5 - 3,
     main: "voltage",
-    skill: { voltage: 1 },
-    draw: { mental: 1 },
+    skill: { voltage: [{ spAp: 3 }] },
+    draw: { mental: [{}] },
   },
   {
     short: "秋色梢",
     member: 3,
     cost: 6,
     main: "love+",
-    draw: { mental: 1 },
+    draw: { mental: [{}] },
   },
   {
     short: "自由梢",
     member: 3,
     cost: 8 - 6,
     main: "protect",
-    skill(stage) {
-      let res = { protect: 1 };
-      if (stage.sp == "mg2") res.spAp = 4 - 2;
-      return res;
-    },
+    skill: { protect: [{ spAp: 4 }] },
     draw(stage) {
       let res = {};
       if (stage.mental) {
-        res = { protect: 1 };
-        if (stage.sp == "mg2") res.spAp = 6 - 2;
+        res = { protect: [{ spAp: 6 }] };
       }
       return res;
     },
@@ -495,8 +462,8 @@ export const cardList = [
     member: 3,
     cost: 2,
     main: "heart",
-    skill: { heart: 1, mental: -1 },
-    draw: { mental: 1 },
+    skill: { heart: [{}], mental: -1 },
+    draw: { mental: [{}] },
   },
   {
     short: "蓝远梢",
@@ -505,7 +472,7 @@ export const cardList = [
     main: "dress",
     skill: { cards: ["蓝远梢👗"] },
     cross(stage, card) {
-      if (card.unit == "srb") stage.trigger({ voltage: 1 });
+      if (card.unit == "srb") stage.trigger({ voltage: [{}] });
     },
   },
   {
@@ -548,30 +515,34 @@ export const cardList = [
     },
     main: "ensemble",
     reshuffle: true,
-    skill: { ensemble: true, heart: 9, ap: -Infinity },
+    skill: {
+      ensemble: true,
+      heart: [{}, {}, {}, {}, {}, {}, {}, {}, {}],
+      ap: -Infinity,
+    },
   },
   {
     short: "ss缀",
     member: 4,
     cost: 5 - 2,
     main: "heart",
-    skill: { heart: 1 },
-    draw: { voltage: 1 },
+    skill: { heart: [{}] },
+    draw: { voltage: [{}] },
   },
   {
     short: "雨伞缀",
     member: 4,
     cost: 5,
     main: "love+",
-    draw: { heart: 1 },
+    draw: { heart: [{}] },
   },
   {
     short: "花火缀",
     member: 4,
     cost: 3,
     main: "voltage",
-    skill: { voltage: 1 },
-    draw: { voltage: 1 },
+    skill: { voltage: [{}] },
+    draw: { voltage: [{}] },
   },
   {
     short: "秋色缀",
@@ -580,38 +551,37 @@ export const cardList = [
     main: "heart",
     skill(stage) {
       let res = {};
-      if (stage.mental) res = { heart: 3 };
-      else res = { heart: 2 };
+      if (stage.mental) res = { heart: [{}, {}, {}] };
+      else res = { heart: [{}, {}] };
       return res;
     },
-    draw: { mental: 1 },
+    draw: { mental: [{}] },
   },
   {
     short: "抱花缀",
     member: 4,
     cost: 4,
     main: "voltage",
-    skill: { voltage: 1 },
-    draw: { voltage: 1 },
+    skill: { voltage: [{}] },
+    draw: { voltage: [{}] },
   },
   {
     short: "音击缀",
     member: 4,
     cost: 9,
     main: "voltage",
-    skill: { voltage: 1, heart: 3 },
-    draw: { voltage: 1, protect: 1 },
+    skill: { voltage: [{}], heart: [{}, {}, {}] },
+    draw: { voltage: [{}], protect: [{}] },
   },
   {
     short: "af缀",
     member: 4,
     cost: 9,
     main: "voltage",
-    skill(stage) {
-      let res = { voltage: 2, heart: 9, ap: -Infinity }; // dada
-      if (stage.sp == "tz") res.heart = 9;
-      if (stage.sp == "tz2") res.spAp = 20;
-      return res;
+    skill: {
+      voltage: [{ over: true, spAp: 22 }],
+      heart: [{ over: true }, {}, {}, {}, {}, {}, {}, {}, {}],
+      ap: -Infinity,
     },
   },
   {
@@ -619,8 +589,8 @@ export const cardList = [
     member: 6,
     cost: 4,
     main: "mental",
-    skill: { mental: 1 },
-    draw: { mental: 1, protect: 1 },
+    skill: { mental: [{}] },
+    draw: { mental: [{}], protect: [{}] },
   },
   {
     short: "舞会慈",
@@ -629,23 +599,23 @@ export const cardList = [
     main: "love+",
     yamaUse: true,
     skill: { mental: -1 },
-    draw: { mental: 1 },
+    draw: { mental: [{}] },
   },
   {
     short: "圣诞慈",
     member: 6,
     cost: 4,
     main: "mental",
-    skill: { mental: 3 },
-    draw: { mental: 1 },
+    skill: { mental: [{}, {}, {}] },
+    draw: { mental: [{}] },
   },
   {
     short: "抱花慈",
     member: 6,
     cost: 4,
     main: "protect",
-    skill: { protect: 1 },
-    draw: { protect: 1 },
+    skill: { protect: [{}] },
+    draw: { protect: [{}] },
   },
   {
     short: "hsct慈",
@@ -659,40 +629,35 @@ export const cardList = [
     member: 1,
     cost: 4 - 3,
     main: "heart",
-    skill: { heart: 1 },
-    draw: { mental: 1 },
+    skill: { heart: [{}] },
+    draw: { mental: [{}] },
   },
   {
     short: "讴歌花帆",
     member: 1,
     cost: 5 - 2,
     main: "mental",
-    skill: { mental: 1 },
-    draw: { voltage: 1 },
+    skill: { mental: [{}] },
+    draw: { voltage: [{}] },
   },
   {
     short: "雨伞花帆",
     member: 1,
     cost: 3,
     main: "voltage",
-    skill: { voltage: 1 },
-    draw: { mental: 1 },
+    skill: { voltage: [{}] },
+    draw: { mental: [{}] },
   },
   {
     short: "自由花帆",
     member: 1,
     cost: 6 - 4,
     main: "voltage",
-    skill(stage) {
-      let res = { voltage: 1, heart: 1 };
-      if (stage.sp == "tz2") res.spAp = 3 - 1;
-      return res;
-    },
+    skill: { voltage: [{ spAp: 3 }], heart: [{}] },
     draw(stage) {
       let res = {};
       if (stage.mental) {
-        res = { voltage: 1 };
-        if (stage.sp == "tz2") res.spAp = 2 - 1;
+        res = { voltage: [{ spAp: 2 }] };
       }
       return res;
     },
@@ -702,7 +667,7 @@ export const cardList = [
     member: 1,
     cost: 6,
     main: "heart",
-    skill: { heart: 1 },
+    skill: { heart: [{}] },
   },
   {
     short: "偶活花帆",
@@ -710,7 +675,7 @@ export const cardList = [
     cost: 9,
     main: "heart",
     reshuffle: true,
-    skill: { heart: 1 },
+    skill: { heart: [{}] },
     cross(stage, card, main, self) {
       if (card.member == 2 || card.member == 5) {
         self.teCostDelta -= 2;
@@ -722,8 +687,8 @@ export const cardList = [
     member: 1,
     cost: 2,
     main: "mental",
-    skill: { mental: 1, voltage: 1 },
-    draw: { mental: 1, heart: 1 },
+    skill: { mental: [{}], voltage: [{}] },
+    draw: { mental: [{}], heart: [{}] },
   },
   {
     short: "蓝远花帆",
@@ -732,7 +697,7 @@ export const cardList = [
     main: "dress",
     skill: { cards: ["蓝远花帆👗"] },
     cross(stage, card) {
-      if (card.unit == "srb") stage.trigger({ voltage: 1 });
+      if (card.unit == "srb") stage.trigger({ voltage: [{}] });
     },
   },
   {
@@ -741,15 +706,15 @@ export const cardList = [
     cost: 3,
     main: "heart",
     once: true,
-    skill: { heart: 1 },
+    skill: { heart: [{}] },
   },
   {
     short: "雨伞沙耶",
     member: 2,
     cost: 4,
     main: "mental",
-    skill: { mental: 1 },
-    draw: { voltage: 1 },
+    skill: { mental: [{}] },
+    draw: { voltage: [{}] },
   },
   {
     short: "tc沙耶",
@@ -757,29 +722,29 @@ export const cardList = [
     cost: 3,
     main: "love+",
     skill: { mental: -1 },
-    draw: { voltage: 1 },
+    draw: { voltage: [{}] },
   },
   {
     short: "宇宙沙耶",
     member: 2,
     cost: 4,
     main: "teMax",
-    skill: { voltage: 1 },
+    skill: { voltage: [{}] },
   },
   {
     short: "沏茶沙耶",
     member: 2,
     cost: 2,
     main: "love+",
-    skill: { voltage: 1 },
+    skill: { voltage: [{}] },
   },
   {
     short: "圣诞沙耶",
     member: 2,
     cost: 4,
     main: "voltage",
-    skill: { voltage: 1, heart: 2 },
-    draw: { voltage: 1 },
+    skill: { voltage: [{}], heart: [{}, {}] },
+    draw: { voltage: [{}] },
   },
   {
     short: "db瑠璃",
@@ -787,8 +752,8 @@ export const cardList = [
     cost: 4,
     main: "reshuffle",
     reshuffle: true,
-    skill: { voltage: 1 },
-    draw: { voltage: 1 },
+    skill: { voltage: [{}] },
+    draw: { voltage: [{}] },
   },
   {
     short: "梦境瑠璃",
@@ -796,7 +761,7 @@ export const cardList = [
     cost: 4,
     main: "reshuffle",
     reshuffle: true,
-    skill: { heart: 1 },
+    skill: { heart: [{}] },
   },
   {
     short: "rod瑠璃",
@@ -804,8 +769,8 @@ export const cardList = [
     cost: 4,
     main: "reshuffle",
     reshuffle: true,
-    skill: { mental: 1 },
-    draw: { mental: 1 },
+    skill: { mental: [{}] },
+    draw: { mental: [{}] },
   },
   {
     short: "一专瑠璃",
@@ -813,7 +778,7 @@ export const cardList = [
     cost: 5,
     main: "reshuffle",
     reshuffle: true,
-    skill: { heart: 1 },
+    skill: { heart: [{}] },
   },
   {
     short: "abdl瑠璃",
@@ -821,7 +786,7 @@ export const cardList = [
     cost: 4,
     main: "reshuffle",
     reshuffle: true,
-    skill: { mental: 1 },
+    skill: { mental: [{}] },
   },
   {
     short: "白昼瑠璃",
@@ -830,7 +795,7 @@ export const cardList = [
     main: "reshuffle",
     reshuffle: true,
     skill: { mental: -1 },
-    draw: { heart: 1 },
+    draw: { heart: [{}] },
   },
   {
     short: "mc瑠璃",
@@ -841,7 +806,7 @@ export const cardList = [
     skill(stage) {
       let res;
       if (stage.ignition) {
-        res = { heart: 1 };
+        res = { heart: [{}] };
       } else {
         res = { ap: 1 };
       }
@@ -854,7 +819,7 @@ export const cardList = [
     cost: 5,
     main: "dress",
     skill: { cards: ["ritm👗1", "ritm👗2", "ritm👗3"] },
-    draw: { protect: 1 },
+    draw: { protect: [{}] },
   },
   {
     short: "ritm👗1",
@@ -862,7 +827,7 @@ export const cardList = [
     cost: 1,
     main: "heart",
     once: true,
-    skill: { heart: 1 },
+    skill: { heart: [{}] },
   },
   {
     short: "ritm👗2",
@@ -870,7 +835,7 @@ export const cardList = [
     cost: 1,
     main: "voltage",
     once: true,
-    skill: { voltage: 1 },
+    skill: { voltage: [{}] },
   },
   {
     short: "ritm👗3",
@@ -886,7 +851,7 @@ export const cardList = [
     main: "dress",
     skill: { cards: ["蓝远👗", "蓝远👗", "蓝远👗"] },
     cross(stage, card) {
-      if (card.unit == "srb") stage.trigger({ voltage: 1 });
+      if (card.unit == "srb") stage.trigger({ voltage: [{}] });
     },
   },
   {
@@ -896,7 +861,7 @@ export const cardList = [
     main: "reshuffle",
     reshuffle: true,
     once: true,
-    skill: { heart: 1 },
+    skill: { heart: [{}] },
   },
   {
     short: "花结吟",
@@ -942,11 +907,10 @@ export const cardList = [
     main: "voltage",
     once: true,
     skill(stage) {
-      let res = { voltage: 1 }; // dada
+      let res = { voltage: [{ over: true, spAp: 9 }] };
       if (stage.getAllCards().length >= 33) {
-        res.heart = 1; // dada
+        res.heart = [{ over: true }];
       }
-      if (stage.sp == "tz2") res.spAp = 9 - 1;
       return res;
     },
   },
@@ -957,11 +921,10 @@ export const cardList = [
     main: "protect",
     once: true,
     skill(stage) {
-      let res = { protect: 1 };
+      let res = { protect: [{ spAp: 8 }] };
       if (stage.getAllCards().length >= 33) {
-        res.heart = 1; // dada
+        res.heart = [{ over: true }];
       }
-      if (stage.sp == "tz2") res.spAp = 8 - 2;
       return res;
     },
   },
@@ -974,7 +937,7 @@ export const cardList = [
     once: true,
     skill(stage) {
       if (stage.getAllCards().length >= 30) {
-        return { heart: 1 }; // dada
+        return { heart: [{ over: true }] };
       }
       return res;
     },
@@ -992,7 +955,7 @@ export const cardList = [
     member: 8,
     cost: 5,
     main: "heart",
-    skill: { heart: 1 },
+    skill: { heart: [{}] },
     afterSkill(stage, self) {
       self.costDelta--;
     },
@@ -1002,6 +965,6 @@ export const cardList = [
     member: 8,
     cost: 3,
     main: "mental",
-    skill: { mental: 1 },
+    skill: { mental: [{}] },
   },
 ];

@@ -173,7 +173,7 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
       )[0];
     }
   }
-  if (newIndexList(stage).length && res == undefined) debugger;
+  // if (newIndexList(stage).length && res == undefined) debugger;
   return res;
 }
 
