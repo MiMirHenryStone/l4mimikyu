@@ -73,6 +73,7 @@ const cardColorDict = {
   dress: "rgb(134,82,195)",
   ap: "rgb(174,141,24)",
   "ap-": "rgb(134,82,195)",
+  ensemble: "black",
   "": "transparent",
 };
 const memberColorDict = {

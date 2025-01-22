@@ -156,7 +156,7 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
         jewelryFilter(
           stage,
           jewelryCountTarget,
-          scoreFilter(stage, dressFilter(stage, newIndexList(stage)))
+          scoreFilter(stage, newIndexList(stage))
         )
       )[0];
     } else {
@@ -167,7 +167,7 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
           jewelryFilter(
             stage,
             jewelryCountTarget,
-            costFilter(stage, dressFilter(stage, newIndexList(stage)))
+            costFilter(stage, newIndexList(stage))
           )
         )
       )[0];
