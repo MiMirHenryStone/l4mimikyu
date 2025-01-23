@@ -88,8 +88,15 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
       (stage.sp == "mg2" || stage.sp == "tz2" || stage.sp == "kz2"
         ? "score"
         : "cost");
-    if (stage.ap + stage.apSpeed * (stage.apMax / 10) >= stage.apMax)
+    if (stage.ap + stage.apSpeed * (stage.apMax / 10) >= stage.apMax) {
       first = "score";
+    } else if (
+      stage.te.filter(
+        (c) => c.getSkill(stage)?.ap < 0 && c.getCost(stage.te) <= stage.ap
+      )?.length > 0
+    ) {
+      first = "score";
+    }
   }
 
   // ignition
@@ -108,7 +115,9 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
         newIndexList(stage).filter((i) => {
           let c = stage.te[i];
           return (
-            (c.getMain(stage) == "mental" || c.getMain(stage) == "protect") &&
+            (c.getMain(stage) == "mental" ||
+              c.getMain(stage) == "protect" ||
+              c.getMain(stage) == "ensemble") &&
             c.short != "上升姬芽"
           );
         })
@@ -119,7 +128,9 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
         newIndexList(stage).filter((i) => {
           let c = stage.te[i];
           return (
-            (c.getMain(stage) == "mental" || c.getMain(stage) == "protect") &&
+            (c.getMain(stage) == "mental" ||
+              c.getMain(stage) == "protect" ||
+              c.getMain(stage) == "ensemble") &&
             c.short != "上升姬芽"
           );
         }),

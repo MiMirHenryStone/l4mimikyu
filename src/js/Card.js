@@ -39,12 +39,12 @@ export default class Card {
     return "";
   }
 
-  getCost(te, sp = true) {
+  getCost(te) {
     let cost = this.cost;
     cost += this.costDelta;
     if (te && this.props?.teCostDelta) cost += this.props?.teCostDelta(te);
     if (te) cost += this.teCostDelta;
-    if (sp && this.props?.spCostDelta) cost += this.props?.spCostDelta(te);
+    if (this.props?.spCostDelta) cost += this.props?.spCostDelta(te);
     return cost >= 1 ? cost : 1;
   }
 
@@ -55,8 +55,7 @@ export default class Card {
     calcCost -= skill?.ap ?? 0;
     calcCost -= skill?.spAp ?? 0;
 
-    if (calcCost < 1 || (calcCost >= stage.apMax && cost <= stage.ap))
-      calcCost = 1;
+    if (calcCost < 1) calcCost = 1;
     return calcCost;
   }
 

@@ -338,9 +338,15 @@ export default class Stage {
         .filter((c) =>
           Object.keys(drawFilter).every((key) => c[key] == drawFilter[key])
         );
-      results.forEach(
-        (c) => (res += testStage.testCard(index, c) / results.length)
-      );
+      results.forEach((c) => {
+        let newTe = [...testStage.te];
+        newTe[index] = c;
+        if (
+          c.getCost(newTe) >=
+          testStage.ap - card.getCost(testStage.te) + testStage.apSpeed
+        )
+          res += testStage.testCard(index, c) / results.length;
+      });
     }
 
     // 打掉衣服提高循环速度
@@ -371,7 +377,7 @@ export default class Stage {
           (this.hasEnsemble ? newLength / testStage.teMax : 1) +
         1;
 
-    if (skill?.ap <= -testStage.apMax)
+    if (skill?.ap <= -testStage.apMax && !isReshuffle)
       res /= Math.ceil(
         Math.min(
           ...this.te
