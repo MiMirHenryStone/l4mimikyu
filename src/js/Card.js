@@ -487,10 +487,10 @@ export const cardList = [
     member: 3,
     cost: 5,
     main: "love+",
-    draw: { cards: ["⚪"] },
+    draw: { cards: ["🫧"] },
   },
   {
-    short: "⚪",
+    short: "🫧",
     member: "bubble",
     cost: 1,
     main: "ap-",
