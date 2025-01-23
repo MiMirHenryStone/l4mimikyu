@@ -15,8 +15,10 @@ function scoreFilter(stage, indexList) {
   return indexList.filter((index, i) => scoreList[i] == max);
 }
 function costFilter(stage, indexList, forceNotEmpty) {
-  let fullCostScoreList = stage.te.map(
-    (c, index) => stage.testResults[index] / stage.te[index].getCalcCost(stage)
+  let fullCostScoreList = stage.te.map((c, index) =>
+    stage.te[index].getCost(stage.te) > stage.apMax
+      ? 0
+      : stage.testResults[index] / stage.te[index].getCalcCost(stage)
   );
   let costScoreList = indexList.map((index) => fullCostScoreList[index]);
   let max = Math.max(...costScoreList);
@@ -145,10 +147,11 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
       index >= 0 &&
       stage.getAllCards().filter((c) => c.member == "jewelry").length <
         jewelryCountTarget &&
-      stage.te[index].getCost(stage.te) <
-        (first == "score"
-          ? stage.ap - stage.apSpeed
-          : stage.ap - stage.apSpeed * (stage.apMax / 10))
+      (stage.te[index].getCost(stage.te) == 1 ||
+        stage.te[index].getCost(stage.te) <
+          (first == "score"
+            ? stage.ap - stage.apSpeed
+            : stage.ap - stage.apSpeed * (stage.apMax / 10)))
     ) {
       res = index;
     }
@@ -156,7 +159,10 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
   if (res == undefined) {
     // jewelry over
     index = stage.te.findIndex(
-      (c) => c.member == "jewelry" && stage.hasCostEffect
+      (c) =>
+        c.member == "jewelry" &&
+        stage.hasCostEffect &&
+        c.getCost(stage) <= stage.ap
     );
     if (
       index >= 0 &&

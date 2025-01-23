@@ -190,6 +190,7 @@
             key: stage.jewelryCountTarget,
             score: stage.score,
             cardTimesDict: stage.cardTimesDict,
+            yData: [stage.yData],
           };
           nextTick(() => dialog.showModal());
         "
@@ -328,6 +329,9 @@
       </table>
     </template>
     <dialog v-if="dialogData" ref="dialog">
+      <div style="height: 25vmin" v-if="dialogData?.yData">
+        <ChartItem :y-data="dialogData.yData"></ChartItem>
+      </div>
       <table>
         <thead>
           <tr>
@@ -363,6 +367,7 @@ import Stage from "@/js/Stage";
 import Card, { cardList } from "@/js/Card";
 import CardItem from "@/components/Card.vue";
 import { strategyPlay } from "@/js/Strategy";
+import ChartItem from "@/components/ChartItem.vue";
 
 const ing = ref(false);
 const auto = ref(false);
@@ -466,6 +471,7 @@ const start = async (a) => {
     ) {
       if (!ing.value) break;
       let score = 0;
+      let yData = [];
       let jewelryCount = 0;
       let cardTimesDict = { apSkip: 0 };
       for (let c of deck.value) cardTimesDict[c.short] = 0;
@@ -480,6 +486,7 @@ const start = async (a) => {
         }
         if (!ing.value) break;
         score += stage.value.score;
+        yData.push(stage.value.yData);
         jewelryCount += stage.value
           .getAllCards()
           .filter((i) => i.member == "jewelry")?.length;
@@ -495,6 +502,7 @@ const start = async (a) => {
         );
       autoResults.value.at(-1).dict[j] = {
         score: Number((score / formData.value.skipTimes).toFixed(2)),
+        yData,
         jewelryCount: Number(
           (jewelryCount / formData.value.skipTimes).toFixed(2)
         ),

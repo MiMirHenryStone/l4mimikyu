@@ -17,7 +17,7 @@ import HelloWorld from "./components/HelloWorld.vue";
     </div>
   </header> -->
 
-  <RouterView />
+  <RouterView style="width: min(100%, 100vh); margin: auto" />
 </template>
 
 <style scoped>
@@ -87,5 +87,8 @@ nav a:first-of-type {
 <style lang="scss">
 body {
   margin: 1em;
+}
+dialog {
+  overflow: visible;
 }
 </style>

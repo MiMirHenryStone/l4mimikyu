@@ -36,6 +36,8 @@ export default class Stage {
     this.hasIgnitionAndScoreCard = false;
     this.hasEnsemble = false;
     this.scoreCardCount = 0;
+
+    this.yData = [];
   }
 
   getAllCards() {
@@ -47,7 +49,7 @@ export default class Stage {
   }
 
   start() {
-    this.ap = this.apSpeed;
+    this.autoAp();
     this.hasIgnitionAndScoreCard =
       this.getAllCards().filter(
         (c) =>
@@ -103,6 +105,7 @@ export default class Stage {
   }
 
   autoAp() {
+    this.yData.push(this.score);
     if (this.sp != "kz2") this.addAp(this.apSpeed);
   }
 
@@ -193,8 +196,8 @@ export default class Stage {
       this.getAllCards().forEach((c) => (c.toYama = false));
     }
 
-    this.timesCount++;
     this.cardsCount++;
+    if (!extra2) this.timesCount++;
 
     if (this.effect == "gc1a" && this.cardsCount % 30 == 0) {
       this.getAllCards().forEach((c) => {
@@ -342,7 +345,7 @@ export default class Stage {
         let newTe = [...testStage.te];
         newTe[index] = c;
         if (
-          c.getCost(newTe) >=
+          c.getCost(newTe) <=
           testStage.ap - card.getCost(testStage.te) + testStage.apSpeed
         )
           res += testStage.testCard(index, c) / results.length;
