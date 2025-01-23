@@ -65,10 +65,10 @@ const initChart = () => {
         ],
       },
       grid: {
-        top: 20,
-        bottom: 20,
-        left: 20,
-        right: 20,
+        top: 10,
+        bottom: 10,
+        left: 10,
+        right: 10,
         containLabel: true,
       },
     });
@@ -166,19 +166,18 @@ defineExpose({ getOption, setOption, showTip, hideTip });
 }
 .button {
   position: absolute;
-  top: 0.25em;
-  left: 0.25em;
+  top: 0.5rem;
+  left: 0.5rem;
   z-index: 1;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 1rem;
   color: #ccc;
 }
 .bg.full-screen {
   z-index: 10000;
   position: fixed;
-  margin: 1rem;
-  width: calc(100% - 2rem);
-  height: calc(100% - 2rem);
+  width: 100%;
+  height: 100%;
   left: 0;
   right: 0;
   top: 0;
