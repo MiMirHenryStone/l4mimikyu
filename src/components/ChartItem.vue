@@ -75,8 +75,12 @@ const initChart = () => {
     charEch.setOption(
       props.yData
         ? {
-            xAxis: { type: "category", boundaryGap: false },
-            yAxis: { type: "value" },
+            xAxis: {
+              type: "category",
+              boundaryGap: false,
+              axisLabel: { show: false },
+            },
+            yAxis: { type: "value", axisLabel: { show: false } },
             series: props.yData.map((data) => ({
               type: "line",
               data,
@@ -172,16 +176,18 @@ defineExpose({ getOption, setOption, showTip, hideTip });
 .bg.full-screen {
   z-index: 10000;
   position: fixed;
-  padding: 1rem;
-  width: 100%;
-  height: 100%;
+  margin: 1rem;
+  width: calc(100% - 2rem);
+  height: calc(100% - 2rem);
   left: 0;
+  right: 0;
   top: 0;
+  bottom: 0;
   box-sizing: border-box;
   background: white;
-  // .button {
-  //   font-size: 1.6rem;
-  // }
+  .button {
+    font-size: 1.5rem;
+  }
   // &.dark {
   //   background: black;
   // }
