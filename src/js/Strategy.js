@@ -1,7 +1,10 @@
-function newIndexList(stage) {
+function newIndexList(stage, next) {
   let indexList = [];
   for (let i = 0; i < stage.te.length; i++) {
-    if (stage.te[i].getCost(stage.te) <= stage.ap && stage.testResults[i] >= 0)
+    if (
+      stage.te[i].getCost(stage.te) <= stage.ap + (next ? stage.apSpeed : 0) &&
+      stage.testResults[i] >= 0
+    )
       indexList.push(i);
   }
   return indexList;
@@ -17,9 +20,12 @@ function costFilter(stage, indexList, forceNotEmpty) {
   );
   let costScoreList = indexList.map((index) => fullCostScoreList[index]);
   let max = Math.max(...costScoreList);
-  let m = (Math.min(...costScoreList) + max) / 2;
-  if (!forceNotEmpty && max <= 0 && Math.max(...fullCostScoreList) > 0) {
-    let mList = indexList.filter((index) => costScoreList[index] >= m);
+  let m =
+    Math.max(
+      ...newIndexList(stage, true).map((index) => fullCostScoreList[index])
+    ) / 2;
+  if (!forceNotEmpty && max <= m && Math.max(...fullCostScoreList) > 0) {
+    let mList = indexList.filter((index) => costScoreList[index] >= 0);
     let min = Math.min(
       ...mList.map((index) => stage.te[index].getCost(stage.te))
     );

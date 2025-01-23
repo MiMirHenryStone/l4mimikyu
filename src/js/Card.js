@@ -127,8 +127,8 @@ export default class Card {
     return n;
   }
 
-  onCross(stage, card, main) {
-    if (this.props?.cross) this.props.cross(stage, card, main, this);
+  onCross(stage, card) {
+    if (this.props?.cross) this.props.cross(stage, card, this);
   }
 
   matchAttrs(dict) {
@@ -218,7 +218,8 @@ export const cardList = [
       return res;
     },
     ignitionTimes: 3,
-    cross(stage, card, main) {
+    cross(stage, card) {
+      let main = card.getMain(stage);
       if (!stage.ignition) {
         if (main == "mental" || main == "protect") {
           stage.trigger({ ignition: 1 });
@@ -300,7 +301,7 @@ export const cardList = [
         { member: "dress", cost: -3 },
       ],
     },
-    cross(stage, card, main, self) {
+    cross(stage, card, self) {
       if (card.unit == "srb") {
         stage.trigger({ heart: [{}] });
         self.teCostDelta -= 3;
@@ -352,9 +353,9 @@ export const cardList = [
     cost: 9,
     main: "protect",
     skill: {
+      ap: -Infinity,
       protect: [{ spAp: 17 }],
       heart: [{ over: true }, {}, {}, {}, {}, {}, {}, {}, {}],
-      ap: -Infinity,
     },
   },
   {
@@ -363,7 +364,7 @@ export const cardList = [
     cost: 39,
     main: "heart",
     skill: { heart: [{ over: true }], cards: ["💎"] },
-    cross(stage, card, main, self) {
+    cross(stage, card, self) {
       if (
         card.member == 1 ||
         card.member == 2 ||
@@ -515,10 +516,11 @@ export const cardList = [
     },
     main: "ensemble",
     reshuffle: true,
+    drawnFilter: true,
     skill: {
+      ap: -Infinity,
       ensemble: true,
       heart: [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-      ap: -Infinity,
     },
   },
   {
@@ -579,9 +581,9 @@ export const cardList = [
     cost: 9,
     main: "voltage",
     skill: {
+      ap: -Infinity,
       voltage: [{ over: true, spAp: 22 }],
       heart: [{ over: true }, {}, {}, {}, {}, {}, {}, {}, {}],
-      ap: -Infinity,
     },
   },
   {
@@ -676,7 +678,7 @@ export const cardList = [
     main: "heart",
     reshuffle: true,
     skill: { heart: [{}] },
-    cross(stage, card, main, self) {
+    cross(stage, card, self) {
       if (card.member == 2 || card.member == 5) {
         self.teCostDelta -= 2;
       }

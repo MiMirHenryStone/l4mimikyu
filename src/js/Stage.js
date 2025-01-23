@@ -14,6 +14,7 @@ export default class Stage {
     this.cardTimesDict = { apSkip: 0 };
 
     this.ignitionChangeQueue = [];
+    this.drawFilterStack = [];
 
     this.timesCount = 0;
     this.cardsCount = 0;
@@ -70,7 +71,7 @@ export default class Stage {
     this.testAllCards();
   }
 
-  draw(index, drawFilter) {
+  draw(index) {
     if (!this.yama.length) {
       this.yama = [...this.sute];
       this.sute = [];
@@ -84,10 +85,14 @@ export default class Stage {
     }
 
     let yama;
+    let drawFilter = this.drawFilterStack.pop();
     if (drawFilter) {
       yama = this.yama.filter((i) => i.matchAttrs(drawFilter));
       if (!yama.length) yama = this.yama;
-    } else yama = this.yama;
+    } else {
+      yama = this.yama.filter((i) => i.props?.drawnFilter);
+    }
+    if (!yama.length) yama = this.yama;
 
     let i = Math.floor(Math.random() * yama.length);
     let card = yama[i];
@@ -111,13 +116,18 @@ export default class Stage {
     }
 
     this.usingCard = { heart: false };
+    let te = [...this.te];
 
-    let card = this.te[index];
+    let card = te[index];
+
+    if (card.props?.drawFilters)
+      this.drawFilterStack.push(...card.props?.drawFilters);
+
     if (!this.cardTimesDict[card.short]) this.cardTimesDict[card.short] = 0;
     this.cardTimesDict[card.short]++;
 
     if (this.sp != "kz2") {
-      this.addAp(-card.getCost(this.te));
+      this.addAp(-card.getCost(te));
     }
 
     card.cost = card.props.cost;
@@ -138,8 +148,8 @@ export default class Stage {
       }
     }
 
-    for (let c of this.te) {
-      c.onCross(this, card, card.getMain(this));
+    for (let c of te) {
+      c.onCross(this, card);
     }
 
     card.afterSkill(this);
@@ -153,18 +163,18 @@ export default class Stage {
 
     if (!extra2) {
       if (card.isReshuffle(this)) {
-        for (let i in this.te) {
+        for (let i in te) {
           if (i != index) {
-            this.sute.push(this.te[i]);
+            this.sute.push(te[i]);
           }
         }
         this.yama.push(...this.sute.filter((c) => c.toYama && !c.toOut));
         this.sute = this.sute.filter((c) => !c.toYama && !c.toOut);
         for (let i = 0; i < this.teMax; i++) {
-          this.draw(i, card.props?.drawFilters?.[i]);
+          this.draw(i);
         }
       } else {
-        this.draw(index, card.props?.drawFilters?.[0]);
+        this.draw(index);
       }
 
       this.usingCard = false;
@@ -311,7 +321,7 @@ export default class Stage {
 
     card.onSkill(testStage);
     for (let c of testStage.te) {
-      c.onCross(testStage, card, card.getMain(testStage));
+      c.onCross(testStage, card);
     }
 
     testStage.calcTestDrawHeartCount();
@@ -482,7 +492,7 @@ export default class Stage {
   ensemble(t) {
     if (t) {
       this.te.forEach((c, i) => {
-        if (!c.getSkill(this)?.ensemble) this.useCard(i, true);
+        if (!c.getSkill(this)?.ensemble) this.useCard(i, this.te);
       });
     }
   }
