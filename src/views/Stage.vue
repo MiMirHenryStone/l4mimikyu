@@ -329,34 +329,36 @@
       </table>
     </template>
     <dialog v-if="dialogData" ref="dialog">
-      <div style="height: 25vmin" v-if="dialogData?.yData">
-        <ChartItem :y-data="dialogData.yData"></ChartItem>
+      <div style="overflow: auto; max-height: calc(100vh - 4em)">
+        <div style="height: 25vmin" v-if="dialogData?.yData">
+          <ChartItem :y-data="dialogData.yData"></ChartItem>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <td>target💎</td>
+              <td>{{ dialogData.key }}</td>
+            </tr>
+            <tr>
+              <td>heart</td>
+              <td>{{ dialogData.score }}</td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(value, key) in dialogData.cardTimesDict">
+              <td>{{ key }}</td>
+              <td>{{ value }}回</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2" style="text-align: center">
+                <button @click="dialogData = undefined">关闭</button>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <td>target💎</td>
-            <td>{{ dialogData.key }}</td>
-          </tr>
-          <tr>
-            <td>heart</td>
-            <td>{{ dialogData.score }}</td>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(value, key) in dialogData.cardTimesDict">
-            <td>{{ key }}</td>
-            <td>{{ value }}回</td>
-          </tr>
-        </tbody>
-        <tfoot>
-          <tr>
-            <td colspan="2" style="text-align: center">
-              <button @click="dialogData = undefined">关闭</button>
-            </td>
-          </tr>
-        </tfoot>
-      </table>
     </dialog>
   </div>
 </template>
