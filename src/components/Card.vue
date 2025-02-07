@@ -74,6 +74,7 @@ const cardColorDict = {
   ap: "rgb(174,141,24)",
   "ap-": "rgb(134,82,195)",
   ensemble: "black",
+  celebration: "rgb(134,82,195)",
   "": "transparent",
 };
 const memberColorDict = {

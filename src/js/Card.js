@@ -952,6 +952,12 @@ export const cardList = [
     ],
   },
   {
+    short: "br吟",
+    member: 7,
+    cost: 3,
+    main: "celebration",
+  },
+  {
     short: "db铃",
     member: 8,
     cost: 5,

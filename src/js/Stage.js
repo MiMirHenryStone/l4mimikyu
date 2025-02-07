@@ -481,10 +481,12 @@ export default class Stage {
   }
   addAp(t) {
     if (t) {
-      let ap = this.ap + t;
+      let ap = Math.floor(this.ap);
+      let ap_ = this.ap - ap;
+      ap += t;
       if (ap > this.apMax) ap = this.apMax;
       if (ap < 0) ap = 0;
-      this.ap = Number(ap.toFixed(2));
+      this.ap = Number((ap + ap_).toFixed(2));
     }
   }
   changeIgnition(t) {
