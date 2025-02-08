@@ -137,12 +137,13 @@ export default class Stage {
     this.cardTimesDict[card.short]++;
 
     if (this.sp != "kz2") {
-      this.addAp(-card.getCost(te));
+      this.addAp(-card.getCost(te, this.ignition));
     }
 
     card.cost = card.props.cost;
 
     // skill -> cross -> afterSkill -> draw/reshuffle
+    let isReshuffle = card.isReshuffle(this);
 
     card.onSkill(this);
 
@@ -172,7 +173,7 @@ export default class Stage {
     if (card.props?.once) card.toOut = true;
 
     if (!extra2) {
-      if (card.isReshuffle(this)) {
+      if (isReshuffle) {
         for (let i in te) {
           if (i != index) {
             this.sute.push(te[i]);
@@ -325,9 +326,9 @@ export default class Stage {
 
     let oldCost, newCost;
     if (drawCard) {
-      oldCost = testStage.te[index].getCost(testStage.te);
+      oldCost = testStage.te[index].getCost(testStage.te, testStage.ignition);
       testStage.te[index] = drawCard;
-      newCost = testStage.te[index].getCost(testStage.te);
+      newCost = testStage.te[index].getCost(testStage.te, testStage.ignition);
       if (
         testStage.sp == "mg2" ||
         testStage.sp == "tz2" ||
@@ -368,8 +369,10 @@ export default class Stage {
         let newTe = [...testStage.te];
         newTe[index] = c;
         if (
-          c.getCost(newTe) <=
-          testStage.ap - card.getCost(testStage.te) + testStage.apSpeed
+          c.getCost(newTe, testStage.ignition) <=
+          testStage.ap -
+            card.getCost(testStage.te, testStage.ignition) +
+            testStage.apSpeed
         )
           res += testStage.testCard(index, c) / results.length;
       });
@@ -408,13 +411,14 @@ export default class Stage {
         Math.min(
           ...this.te
             .filter((c) => c != card && c.short != this.targetCard1)
-            .map((c) => c.getCost(this.te))
+            .map((c) => c.getCost(this.te, this.ignition))
         ) / testStage.apSpeed
       );
 
     if (card.short == "上升姬芽") {
       if (!this.hasIgnitionAndScoreCard) res *= 3 / 4;
-      if (this.hasCostEffect) res *= card.getCost(testStage.te);
+      if (this.hasCostEffect)
+        res *= card.getCost(testStage.te, testStage.ignition);
     }
 
     if (drawCard) res /= Math.max(2, (oldCost + newCost) / oldCost);

@@ -4,7 +4,10 @@
     :style="{
       pointerEvents:
         te &&
-        props.card.getCost(te ? props.stage.te : undefined) > props.stage.ap
+        props.card.getCost(
+          te ? props.stage.te : undefined,
+          props.stage?.ignition
+        ) > props.stage.ap
           ? 'none'
           : props.pointerEvents,
     }"
@@ -26,7 +29,12 @@
       {{ props.card.short }}
     </div>
     <div class="cost">
-      {{ props.card.getCost(te ? props.stage.te : undefined) }}
+      {{
+        props.card.getCost(
+          te ? props.stage.te : undefined,
+          props.stage?.ignition
+        )
+      }}
     </div>
     <div
       class="main"

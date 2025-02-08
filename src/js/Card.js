@@ -15,6 +15,7 @@ export default class Card {
       }
 
       this.cost = props.cost;
+      this.ignitionCost = props.ignitionCost;
       this.costDelta = 0;
       this.teCostDelta = 0;
     }
@@ -39,8 +40,10 @@ export default class Card {
     return "";
   }
 
-  getCost(te) {
-    let cost = this.cost;
+  getCost(te, ignition) {
+    let cost = ignition
+      ? this.ignitionCost + this.cost - this.props?.cost ?? this.cost
+      : this.cost;
     cost += this.costDelta;
     if (te && this.props?.teCostDelta) cost += this.props?.teCostDelta(te);
     if (te) cost += this.teCostDelta;
@@ -50,7 +53,7 @@ export default class Card {
 
   getCalcCost(stage) {
     let skill = this.getSkill(stage);
-    let cost = this.getCost(stage.te);
+    let cost = this.getCost(stage.te, stage.ignition);
     let calcCost = cost;
     calcCost -= skill?.ap ?? 0;
     calcCost -= skill?.spAp ?? 0;
@@ -488,7 +491,7 @@ export const cardList = [
     member: 3,
     cost: 2,
     main: "heart",
-    skill: { heart: [{}], mental: -1 },
+    skill: { heart: [{}], mental: [{ minus: true }] },
     draw: { mental: [{}] },
   },
   {
@@ -532,11 +535,11 @@ export const cardList = [
     short: "af梢",
     member: 3,
     cost: 0,
-    spCostDelta(te) {
+    spCostDelta(te, ignition) {
       return (
         te
           ?.filter((c) => !c.props?.spCostDelta)
-          ?.reduce((prev, curr) => prev + curr.getCost(te, false), 0) || 0
+          ?.reduce((prev, curr) => prev + curr.getCost(te, ignition), 0) || 0
       );
     },
     main: "ensemble",
@@ -625,7 +628,7 @@ export const cardList = [
     cost: 3,
     main: "love+",
     yamaUse: true,
-    skill: { mental: -1 },
+    skill: { mental: [{ minus: true }] },
     draw: { mental: [{}] },
   },
   {
@@ -656,6 +659,9 @@ export const cardList = [
     member: 6,
     cost: 10,
     main: "heart+",
+    draw(stage, self) {
+      if (stage.ignition && stage.section >= 4) self.teCostDelta -= 7;
+    },
   },
   {
     short: "pa慈",
@@ -761,7 +767,7 @@ export const cardList = [
     member: 2,
     cost: 3,
     main: "love+",
-    skill: { mental: -1 },
+    skill: { mental: [{ minus: true }] },
     draw: { voltage: [{}] },
   },
   {
@@ -792,8 +798,7 @@ export const cardList = [
     cost: 15,
     main: "love++",
     draw(stage, self) {
-      if (Number(stage.section) >= 2 && Number(stage.section) <= 4)
-        self.teCostDelta -= 10;
+      if (stage.section >= 2 && stage.section <= 4) self.teCostDelta -= 10;
     },
   },
   {
@@ -805,7 +810,7 @@ export const cardList = [
     skill: { voltage: [{}] },
     draw(stage, self) {
       let res = { voltage: [{}] };
-      if (stage.section <= 1) self.teCostDelta -= 1;
+      if (stage.section <= 3) self.teCostDelta -= 1;
       return res;
     },
   },
@@ -855,7 +860,7 @@ export const cardList = [
     cost: 3,
     main: "reshuffle",
     reshuffle: true,
-    skill: { mental: -1 },
+    skill: { mental: [{ minus: true }] },
     draw: { heart: [{}] },
   },
   {
@@ -872,6 +877,45 @@ export const cardList = [
         res = { ap: 1 };
       }
       return res;
+    },
+  },
+  {
+    short: "上升瑠璃",
+    member: 5,
+    cost: 3,
+    ignitionCost: 13,
+    main(stage) {
+      if (stage?.ignition) return "love++";
+      else return "teMax";
+    },
+    reshuffle: (stage) => stage?.ignition && stage?.mental,
+    skill(stage) {
+      let res = {};
+      if (stage.ignition) {
+        if (stage.mental) {
+          res.heart = [{ over: true }];
+          res.mental = [{ minus: true }];
+        }
+
+        res["ap-"] = [{ unit: "mrp", cost: -3 }];
+      } else {
+        res.voltage = [{}];
+      }
+      return res;
+    },
+    ignitionTimes: 3,
+    draw(stage) {
+      if (!stage.ignition) {
+        return { mental: [{}] };
+      }
+    },
+    cross(stage, card) {
+      let main = card.getMain(stage);
+      if (!stage.ignition) {
+        if (main == "mental" || main == "protect") {
+          stage.trigger({ ignition: 1 });
+        }
+      }
     },
   },
   {

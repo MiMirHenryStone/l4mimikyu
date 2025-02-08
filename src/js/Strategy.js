@@ -2,7 +2,8 @@ function newIndexList(stage, next) {
   let indexList = [];
   for (let i = 0; i < stage.te.length; i++) {
     if (
-      stage.te[i].getCost(stage.te) <= stage.ap + (next ? stage.apSpeed : 0) &&
+      stage.te[i].getCost(stage.te, stage.ignition) <=
+        stage.ap + (next ? stage.apSpeed : 0) &&
       (stage.strategy == "heartMax"
         ? !stage.te[i].getSkill(stage)?.cards ||
           stage.te[i].short == stage.targetCard0
@@ -13,7 +14,9 @@ function newIndexList(stage, next) {
   return indexList;
 }
 function costFilter(stage, indexList) {
-  let costList = indexList.map((index) => stage.te[index].getCost(stage.te));
+  let costList = indexList.map((index) =>
+    stage.te[index].getCost(stage.te, stage.ignition)
+  );
   let min = Math.min(...costList);
   return indexList.filter((index, i) => costList[i] == min);
 }
@@ -24,7 +27,7 @@ function scoreFilter(stage, indexList) {
 }
 function costScoreFilter(stage, indexList, forceNotEmpty) {
   let fullCostScoreList = stage.te.map((c, index) =>
-    stage.te[index].getCost(stage.te) > stage.apMax
+    stage.te[index].getCost(stage.te, stage.ignition) > stage.apMax
       ? 0
       : stage.testResults[index] / stage.te[index].getCalcCost(stage)
   );
@@ -37,10 +40,12 @@ function costScoreFilter(stage, indexList, forceNotEmpty) {
   if (!forceNotEmpty && max <= m && Math.max(...fullCostScoreList) > 0) {
     let mList = indexList.filter((index) => costScoreList[index] >= 0);
     let min = Math.min(
-      ...mList.map((index) => stage.te[index].getCost(stage.te))
+      ...mList.map((index) => stage.te[index].getCost(stage.te, stage.ignition))
     );
     if (min <= stage.apSpeed)
-      return mList.filter((index) => stage.te[index].getCost(stage.te) == min);
+      return mList.filter(
+        (index) => stage.te[index].getCost(stage.te, stage.ignition) == min
+      );
     else return [];
   } else return indexList.filter((index, i) => costScoreList[i] == max);
 }
@@ -115,7 +120,9 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
         first = "score";
       } else if (
         stage.te.filter(
-          (c) => c.getSkill(stage)?.ap < 0 && c.getCost(stage.te) <= stage.ap
+          (c) =>
+            c.getSkill(stage)?.ap < 0 &&
+            c.getCost(stage.te, stage.ignition) <= stage.ap
         )?.length > 0
       ) {
         first = "score";
@@ -126,7 +133,7 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
   // ignition
   if (
     !stage.ignition &&
-    stage.te.find((c) => c.short == "上升姬芽") &&
+    stage.te.find((c) => c.short.match(/^上升/)) &&
     stage.te.find(
       (c) =>
         (c.getMain(stage) == "mental" || c.getMain(stage) == "protect") &&
@@ -183,8 +190,8 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
       index >= 0 &&
       stage.getAllCards().filter((c) => c.short == stage.targetCard1).length <
         jewelryCountTarget &&
-      (stage.te[index].getCost(stage.te) == 1 ||
-        stage.te[index].getCost(stage.te) <
+      (stage.te[index].getCost(stage.te, stage.ignition) == 1 ||
+        stage.te[index].getCost(stage.te, stage.ignition) <
           (first == "score"
             ? stage.ap - stage.apSpeed
             : first == "heartMax"
@@ -200,7 +207,7 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
       (c) =>
         c.short == stage.targetCard1 &&
         stage.hasCostEffect &&
-        c.getCost(stage) <= stage.ap
+        c.getCost(stage, stage.ignition) <= stage.ap
     );
     if (
       index >= 0 &&

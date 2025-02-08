@@ -468,7 +468,9 @@ const newStage = () => {
   stage.value.effect = formData.value.effect;
   stage.value.strategy = formData.value.strategy;
   stage.value.yama = deck.value.map((i) => new Card(i.short));
-  stage.value.section = routeQuery.value.section;
+  stage.value.section = routeQuery.value.section
+    ? Number(routeQuery.value.section)
+    : undefined;
 
   stage.value.strategy = routeQuery.value.section == 1 ? "heartMax" : "cost";
   stage.value.targetCard0 =
