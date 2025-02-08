@@ -223,14 +223,14 @@ export default class Stage {
       for (let i = 0; i < this.teMax; i++) this.draw(i);
     } else if (this.effect == "st1a" && this.cardsCount % 6 == 0) {
       this.getAllCards().forEach((c) => c.cost++);
-    } else if (this.effect == "st2a" && this.cardsCount % 3 == 0) {
+    } else if (this.effect == "kj2a" && this.cardsCount % 3 == 0) {
       this.sute.push(...this.te.splice(0));
       for (let i = 0; i < this.teMax; i++) this.draw(i);
-    } else if (this.effect == "st2b" && this.cardsCount % 10 == 0) {
+    } else if (this.effect == "kj2b" && this.cardsCount % 10 == 0) {
       this.getAllCards().forEach((c) => {
         c.cost--;
       });
-    } else if (this.effect == "st2c") {
+    } else if (this.effect == "kj2c") {
       this.trigger({ ap: 1 });
     }
 

@@ -112,6 +112,13 @@
         <label for="effect">效果: </label>
         <select v-model="formData.effect" :disabled="ing" id="effect">
           <option value="">--</option>
+          <option value="kj2a">
+            (2025/02 个人战A) skill3回使用 手札全捨 山札手札上限引直
+          </option>
+          <option value="kj2b">
+            (2025/02 个人战B) skill10回使用 deck全card消费AP-1
+          </option>
+          <option value="kj2c">(2025/02 个人战C) skill1回使用 AP1回复</option>
           <option value="st1a">
             (2025/01 公会战A) skill6回使用 deck全card消费AP+1
           </option>
@@ -132,16 +139,6 @@
           <option value="gc1c">
             (2025/01 GC C) skill20回使用 deck全ドルケcard消费APstage中常-1
           </option>
-          <option value="st2a">
-            (2025/02 公会战A) skill3回使用 手札全捨 山札手札上限引直
-          </option>
-          <option value="st2a">
-            (2025/02 公会战A) skill3回使用 手札全捨 山札手札上限引直
-          </option>
-          <option value="st2b">
-            (2025/02 公会战B) skill10回使用 deck全card消费AP-1
-          </option>
-          <option value="st2c">(2025/02 公会战C) skill1回使用 AP1回复</option>
         </select>
       </div>
       <div v-if="routeQuery.section != 1">
