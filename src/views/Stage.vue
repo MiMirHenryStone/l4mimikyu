@@ -57,7 +57,9 @@
                 (1 - 0.1 * Math.min(9, 18 - formData.deckLength))
               ).toFixed(2)
             );
-            formData.cardTimes = Math.floor((formData.qc * 8) / 3);
+            formData.cardTimes = Math.floor(
+              ((formData.qc * formData.sh) / 5) * (routeQuery.section ? 1 : 4)
+            );
           "
           :disabled="ing"
         >
@@ -130,9 +132,19 @@
           <option value="gc1c">
             (2025/01 GC C) skill20回使用 deck全ドルケcard消费APstage中常-1
           </option>
+          <option value="st2a">
+            (2025/02 公会战A) skill3回使用 手札全捨 山札手札上限引直
+          </option>
+          <option value="st2a">
+            (2025/02 公会战A) skill3回使用 手札全捨 山札手札上限引直
+          </option>
+          <option value="st2b">
+            (2025/02 公会战B) skill10回使用 deck全card消费AP-1
+          </option>
+          <option value="st2c">(2025/02 公会战C) skill1回使用 AP1回复</option>
         </select>
       </div>
-      <div>
+      <div v-if="routeQuery.section != 1">
         <label for="strategy">策略: </label>
         <select v-model="formData.strategy" :disabled="ing" id="strategy">
           <option value="cost">LOVE/AP优先</option>
@@ -141,7 +153,10 @@
         </select>
       </div>
       <div>
-        <label for="jewelry">LIVE TARGET💎: </label>
+        <label for="jewelry" v-if="routeQuery.section == 1">
+          LIVE TARGET👗:
+        </label>
+        <label for="jewelry" v-else>LIVE TARGET💎: </label>
         <input
           v-model="formData.jewelryCountTarget"
           type="number"
@@ -149,14 +164,17 @@
           @change="
             if (ing && !auto) {
               stage.jewelryCountTarget = formData.jewelryCountTarget;
-              stage.testAllCards();
+              if (stage.section != 1) stage.testAllCards();
               refreshOsusume();
             }
           "
         />
       </div>
       <div>
-        <label for="jewelry">SKIP TARGET💎: </label>
+        <label for="jewelry" v-if="routeQuery.section == 1">
+          SKIP TARGET👗:
+        </label>
+        <label for="jewelry" v-else>SKIP TARGET💎: </label>
         <input
           v-model="formData.jewelryCountTargetMin"
           :disabled="ing"
@@ -188,7 +206,7 @@
         @click="
           dialogData = {
             key: stage.jewelryCountTarget,
-            score: stage.score,
+            score: stage.strategy == 'heartMax' ? stage.heartMax : stage.score,
             cardTimesDict: stage.cardTimesDict,
             yData: [stage.yData],
           };
@@ -215,10 +233,11 @@
         <div>{{ stage.timesCount }}回</div>
       </h2>
       <h2 class="flex-between">
-        <div>
+        <div style="width: 25%">
           {{ stage.sp == "mg2" ? "∞" : stage.mental ? "100%" : "-%" }}
         </div>
-        <div>
+        <div style="text-align: center">♥×{{ stage.heartMax }}</div>
+        <div style="width: 25%; text-align: right">
           {{ stage.ignition ? "🔥" : "🚫" }}
           {{ stage.sp == "kz2" ? "∞" : stage.ap }}
         </div>
@@ -287,10 +306,9 @@
             <td colspan="2">策略: {{ autoResult.formData.strategy }}</td>
           </tr>
           <tr>
-            <td>target<br />💎</td>
-            <!-- <td>actual<br />💎</td> -->
-            <td>kol慈<br />回数</td>
-            <td>💎<br />回数</td>
+            <td>target<br />{{ stage.targetCard1 }}</td>
+            <td>{{ stage.targetCard0 }}<br />回数</td>
+            <td>{{ stage.targetCard1 }}<br />回数</td>
             <td>AP SKIP<br />回数</td>
             <td>heart</td>
             <td>%</td>
@@ -307,8 +325,12 @@
           >
             <td>{{ key }}</td>
             <!-- <td>{{ item.jewelryCount }}</td> -->
-            <td>{{ item.cardTimesDict.kol慈 ?? 0 }}</td>
-            <td>{{ item.cardTimesDict["💎"] ?? 0 }}</td>
+            <td>
+              {{ item.cardTimesDict[autoResult.formData.targetCard0] ?? 0 }}
+            </td>
+            <td>
+              {{ item.cardTimesDict[autoResult.formData.targetCard1] ?? 0 }}
+            </td>
             <td>{{ item.cardTimesDict.apSkip }}</td>
             <td>{{ item.score }}</td>
             <td>
@@ -370,6 +392,10 @@ import Card, { cardList } from "@/js/Card";
 import CardItem from "@/components/Card.vue";
 import { strategyPlay } from "@/js/Strategy";
 import ChartItem from "@/components/ChartItem.vue";
+import { useRoute } from "vue-router";
+
+const route = useRoute();
+const routeQuery = ref(route.query);
 
 const ing = ref(false);
 const auto = ref(false);
@@ -381,18 +407,17 @@ const dialog = ref();
 const dialogData = ref();
 
 const formData = ref({
-  qc: 140,
+  qc: 104,
   sh: 3.3,
   deckLength: 17,
-  apSpeed: 2.34,
+  apSpeed: 3.15,
   apMax: 20,
   sp: "",
   effect: "",
   jewelryCountTargetMin: 0,
   jewelryCountTargetMax: 16,
-  cardTimes: 373,
+  cardTimes: 68,
   skipTimes: 36,
-  strategy: "cost",
   jewelryCountTarget: 0,
 });
 
@@ -446,6 +471,12 @@ const newStage = () => {
   stage.value.effect = formData.value.effect;
   stage.value.strategy = formData.value.strategy;
   stage.value.yama = deck.value.map((i) => new Card(i.short));
+  stage.value.section = routeQuery.value.section;
+
+  stage.value.strategy = routeQuery.value.section == 1 ? "heartMax" : "cost";
+  stage.value.targetCard0 =
+    routeQuery.value.section == 1 ? "蓝远花帆" : "kol慈";
+  stage.value.targetCard1 = routeQuery.value.section == 1 ? "蓝远花帆👗" : "💎";
 };
 newStage();
 
@@ -487,11 +518,14 @@ const start = async (a) => {
           stage.value.useCard(strategyPlay(stage.value, j));
         }
         if (!ing.value) break;
-        score += stage.value.score;
+        score +=
+          stage.value.strategy == "heartMax"
+            ? stage.value.heartMax
+            : stage.value.score;
         yData.push(stage.value.yData);
         jewelryCount += stage.value
           .getAllCards()
-          .filter((i) => i.member == "jewelry")?.length;
+          .filter((i) => i.short == stage.value.targetCard1)?.length;
         for (let key in stage.value.cardTimesDict) {
           if (!cardTimesDict[key]) cardTimesDict[key] = 0;
           cardTimesDict[key] += stage.value.cardTimesDict[key];

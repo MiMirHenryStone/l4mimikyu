@@ -70,6 +70,17 @@ export default class Card {
     return false;
   }
 
+  isDrawnFilter(stage) {
+    if (this.props?.drawnFilter) {
+      if (typeof this.props.drawnFilter == "function") {
+        return this.props.drawnFilter(stage);
+      } else {
+        return this.props.drawnFilter;
+      }
+    }
+    return false;
+  }
+
   getSkill(stage) {
     if (this.props?.skill) {
       if (typeof this.props.skill == "function") {
@@ -241,6 +252,9 @@ export const cardList = [
     main: "reshuffle",
     reshuffle: true,
     skill: { mental: [{}] },
+    draw(stage) {
+      if (stage.section == 1) return { ap: 5 };
+    },
   },
   {
     short: "音击花帆",
@@ -458,6 +472,18 @@ export const cardList = [
     },
   },
   {
+    short: "赠物梢",
+    member: 3,
+    cost: 3,
+    main: "love+",
+    drawnFilter(stage) {
+      return stage.section == 1;
+    },
+    draw(stage) {
+      if (stage.section == 1) return { ap: 8 };
+    },
+  },
+  {
     short: "教师梢",
     member: 3,
     cost: 2,
@@ -626,6 +652,18 @@ export const cardList = [
     reshuffle: true,
   },
   {
+    short: "mc慈",
+    member: 6,
+    cost: 10,
+    main: "heart+",
+  },
+  {
+    short: "pa慈",
+    member: 6,
+    cost: 5,
+    main: "heart+",
+  },
+  {
     short: "ritm花帆",
     member: 1,
     cost: 4 - 3,
@@ -708,6 +746,7 @@ export const cardList = [
     main: "heart",
     once: true,
     skill: { heart: [{}] },
+    draw: { heartMax: 12 },
   },
   {
     short: "雨伞沙耶",
@@ -748,13 +787,27 @@ export const cardList = [
     draw: { voltage: [{}] },
   },
   {
+    short: "织姬沙耶",
+    member: 2,
+    cost: 15,
+    main: "love++",
+    draw(stage, self) {
+      if (Number(stage.section) >= 2 && Number(stage.section) <= 4)
+        self.teCostDelta -= 10;
+    },
+  },
+  {
     short: "db瑠璃",
     member: 5,
     cost: 4,
     main: "reshuffle",
     reshuffle: true,
     skill: { voltage: [{}] },
-    draw: { voltage: [{}] },
+    draw(stage, self) {
+      let res = { voltage: [{}] };
+      if (stage.section <= 1) self.teCostDelta -= 1;
+      return res;
+    },
   },
   {
     short: "梦境瑠璃",
@@ -788,6 +841,13 @@ export const cardList = [
     main: "reshuffle",
     reshuffle: true,
     skill: { mental: [{}] },
+  },
+  {
+    short: "tc瑠璃",
+    member: 5,
+    cost: 2,
+    main: "reshuffle",
+    reshuffle: true,
   },
   {
     short: "白昼瑠璃",
@@ -865,6 +925,27 @@ export const cardList = [
     skill: { heart: [{}] },
   },
   {
+    short: "水母吟",
+    member: 7,
+    cost: 3,
+    main: "dress",
+    skill: { cards: ["水母👗", "水母👗", "水母👗"] },
+  },
+  {
+    short: "水母👗",
+    member: "dress",
+    cost: 3,
+    main: "ap",
+    once: true,
+    skill(stage) {
+      let res = {};
+      if (stage.getAllCards().length >= 30) {
+        res.heart = [{ over: true }];
+      }
+      return res;
+    },
+  },
+  {
     short: "花结吟",
     member: 7,
     cost: 13,
@@ -937,6 +1018,7 @@ export const cardList = [
     reshuffle: true,
     once: true,
     skill(stage) {
+      let res = {};
       if (stage.getAllCards().length >= 30) {
         return { heart: [{ over: true }] };
       }
@@ -973,5 +1055,18 @@ export const cardList = [
     cost: 3,
     main: "mental",
     skill: { mental: [{}] },
+  },
+  {
+    short: "bsbd铃",
+    member: 8,
+    cost: 4,
+    main: "heartMax",
+  },
+  {
+    short: "bsbd姬芽",
+    member: 9,
+    cost: 4,
+    reshuffle: true,
+    main: "reshuffle",
   },
 ];

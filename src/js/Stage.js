@@ -26,6 +26,8 @@ export default class Stage {
     this.ap = 0;
     this.apSpeed = 2.5;
 
+    this.heartMax = 100;
+
     this.drawHeartCount = 0;
     this.jewelryCountTarget = 0;
 
@@ -33,6 +35,7 @@ export default class Stage {
 
     this.testResults = [];
 
+    this.hasIgnitionCard = false;
     this.hasIgnitionAndScoreCard = false;
     this.hasEnsemble = false;
     this.scoreCardCount = 0;
@@ -50,6 +53,10 @@ export default class Stage {
 
   start() {
     this.autoAp();
+    this.hasIgnitionCard =
+      this.getAllCards().filter(
+        (c) => c.props?.main == "mental" || c.props?.main == "protect"
+      ).length > 0;
     this.hasIgnitionAndScoreCard =
       this.getAllCards().filter(
         (c) =>
@@ -70,7 +77,7 @@ export default class Stage {
 
     this.hasCostEffect = ["st1a"].includes(this.effect);
 
-    this.testAllCards();
+    if (this.section != 1) this.testAllCards();
   }
 
   draw(index) {
@@ -92,7 +99,7 @@ export default class Stage {
       yama = this.yama.filter((i) => i.matchAttrs(drawFilter));
       if (!yama.length) yama = this.yama;
     } else {
-      yama = this.yama.filter((i) => i.props?.drawnFilter);
+      yama = this.yama.filter((i) => i.isDrawnFilter(this));
     }
     if (!yama.length) yama = this.yama;
 
@@ -105,7 +112,7 @@ export default class Stage {
   }
 
   autoAp() {
-    this.yData.push(this.score);
+    this.yData.push(this.strategy == "heartMax" ? this.heartMax : this.score);
     if (this.sp != "kz2") this.addAp(this.apSpeed);
   }
 
@@ -216,13 +223,22 @@ export default class Stage {
       for (let i = 0; i < this.teMax; i++) this.draw(i);
     } else if (this.effect == "st1a" && this.cardsCount % 6 == 0) {
       this.getAllCards().forEach((c) => c.cost++);
+    } else if (this.effect == "st2a" && this.cardsCount % 3 == 0) {
+      this.sute.push(...this.te.splice(0));
+      for (let i = 0; i < this.teMax; i++) this.draw(i);
+    } else if (this.effect == "st2b" && this.cardsCount % 10 == 0) {
+      this.getAllCards().forEach((c) => {
+        c.cost--;
+      });
+    } else if (this.effect == "st2c") {
+      this.trigger({ ap: 1 });
     }
 
     if (!this.protect && this.sp != "mg2") this.mental = false;
 
     if (!extra2) {
       this.autoAp();
-      this.testAllCards();
+      if (this.section != 1) this.testAllCards();
     }
   }
 
@@ -279,7 +295,11 @@ export default class Stage {
     let short = drawCard ? drawCard.short : this.te[index].short;
     if (short == "kol慈") return 0.01;
     if (short == "💎") return 0;
-    if (["ritm吟", "蓝远梢", "蓝远花帆", "pa吟", "花结吟"].includes(short))
+    if (
+      ["ritm吟", "蓝远梢", "蓝远花帆", "pa吟", "水母吟", "花结吟"].includes(
+        short
+      )
+    )
       return -0.01;
 
     let testStage = new Stage([]);
@@ -297,6 +317,9 @@ export default class Stage {
     testStage.sp = this.sp;
     testStage.jewelryCountTarget = this.jewelryCountTarget;
     testStage.scoreCardCount = this.scoreCardCount;
+    testStage.section = this.section;
+    testStage.targetCard0 = this.targetCard0;
+    testStage.targetCard1 = this.targetCard1;
 
     let oldLength = testStage.getAllCards().length;
 
@@ -384,7 +407,7 @@ export default class Stage {
       res /= Math.ceil(
         Math.min(
           ...this.te
-            .filter((c) => c != card && c.member != "jewelry")
+            .filter((c) => c != card && c.short != this.targetCard1)
             .map((c) => c.getCost(this.te))
         ) / testStage.apSpeed
       );
@@ -417,6 +440,7 @@ export default class Stage {
         if (key == "protect") this.addProtect(value);
         if (key == "ap-") this.subtractAp(value);
         if (key == "cards") this.addCard(value);
+        if (key == "heartMax") this.heartMax += value;
         if (key == "ensemble") this.ensemble(value);
 
         if (key == "ignition") this.changeIgnition(value);
@@ -484,9 +508,10 @@ export default class Stage {
       let ap = Math.floor(this.ap);
       let ap_ = this.ap - ap;
       ap += t;
-      if (ap > this.apMax) ap = this.apMax;
       if (ap < 0) ap = 0;
-      this.ap = Number((ap + ap_).toFixed(2));
+      ap += ap_;
+      if (ap > this.apMax) ap = this.apMax;
+      this.ap = Number(ap.toFixed(2));
     }
   }
   changeIgnition(t) {

@@ -35,10 +35,12 @@
       }"
     ></div>
     <div v-if="props.close" class="close">×</div>
-    <div v-if="props.te" class="test">
+    <div v-if="props.te && props.stage.testResults?.length" class="test">
       {{
         Number(
-          props.stage.testResults[props.stage.te.indexOf(props.card)].toFixed(2)
+          props.stage.testResults?.[
+            props.stage.te.indexOf(props.card)
+          ]?.toFixed(2)
         )
       }}
     </div>
@@ -64,7 +66,10 @@ const props = defineProps({
 
 const cardColorDict = {
   heart: "rgb(204,39,39)",
+  "heart+": "rgb(174,141,24)",
+  heartMax: "rgb(204,39,39)",
   "love+": "rgb(174,141,24)",
+  "love++": "rgb(174,141,24)",
   voltage: "rgb(174,141,24)",
   mental: "rgb(48,124,24)",
   reshuffle: "rgb(134,82,195)",

@@ -3,18 +3,26 @@ function newIndexList(stage, next) {
   for (let i = 0; i < stage.te.length; i++) {
     if (
       stage.te[i].getCost(stage.te) <= stage.ap + (next ? stage.apSpeed : 0) &&
-      stage.testResults[i] >= 0
+      (stage.strategy == "heartMax"
+        ? !stage.te[i].getSkill(stage)?.cards ||
+          stage.te[i].short == stage.targetCard0
+        : stage.testResults[i] >= 0)
     )
       indexList.push(i);
   }
   return indexList;
+}
+function costFilter(stage, indexList) {
+  let costList = indexList.map((index) => stage.te[index].getCost(stage.te));
+  let min = Math.min(...costList);
+  return indexList.filter((index, i) => costList[i] == min);
 }
 function scoreFilter(stage, indexList) {
   let scoreList = indexList.map((index) => stage.testResults[index]);
   let max = Math.max(...scoreList);
   return indexList.filter((index, i) => scoreList[i] == max);
 }
-function costFilter(stage, indexList, forceNotEmpty) {
+function costScoreFilter(stage, indexList, forceNotEmpty) {
   let fullCostScoreList = stage.te.map((c, index) =>
     stage.te[index].getCost(stage.te) > stage.apMax
       ? 0
@@ -61,6 +69,18 @@ function drawFilterReshuffleFilter(stage, indexList) {
   if (newList.length) return newList;
   else return indexList;
 }
+// reshuffle
+function reshuffleFilter(stage, indexList) {
+  let newList = indexList.filter((index) => stage.te[index].isReshuffle(stage));
+  if (newList.length) return newList;
+  else {
+    let newList = newIndexList(stage, true).filter((index) =>
+      stage.te[index].isReshuffle(stage)
+    );
+    if (newList.length) return [];
+    else return indexList;
+  }
+}
 // dress
 function dressFilter(stage, indexList) {
   let newList = indexList.filter((index) => stage.te[index].member == "dress");
@@ -71,10 +91,10 @@ function dressFilter(stage, indexList) {
 function jewelryFilter(stage, jewelryCountTarget, indexList) {
   let jewelryCount = stage
     .getAllCards()
-    .filter((i) => i.member == "jewelry").length;
+    .filter((c) => c.short == stage.targetCard1).length;
   if (jewelryCount > jewelryCountTarget) return indexList;
   let newList = indexList.filter(
-    (index) => stage.te[index].member != "jewelry"
+    (index) => stage.te[index].short != stage.targetCard1
   );
   if (newList.length) return newList;
   else return indexList;
@@ -90,14 +110,16 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
       (stage.sp == "mg2" || stage.sp == "tz2" || stage.sp == "kz2"
         ? "score"
         : "cost");
-    if (stage.ap + stage.apSpeed * (stage.apMax / 10) >= stage.apMax) {
-      first = "score";
-    } else if (
-      stage.te.filter(
-        (c) => c.getSkill(stage)?.ap < 0 && c.getCost(stage.te) <= stage.ap
-      )?.length > 0
-    ) {
-      first = "score";
+    if (stage.strategy != "heartMax") {
+      if (stage.ap + stage.apSpeed * (stage.apMax / 10) >= stage.apMax) {
+        first = "score";
+      } else if (
+        stage.te.filter(
+          (c) => c.getSkill(stage)?.ap < 0 && c.getCost(stage.te) <= stage.ap
+        )?.length > 0
+      ) {
+        first = "score";
+      }
     }
   }
 
@@ -108,7 +130,7 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
     stage.te.find(
       (c) =>
         (c.getMain(stage) == "mental" || c.getMain(stage) == "protect") &&
-        c.short != "上升姬芽"
+        (stage.hasIgnitionCard ? c.short != "上升姬芽" : true)
     )
   ) {
     if (first == "score") {
@@ -120,9 +142,23 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
             (c.getMain(stage) == "mental" ||
               c.getMain(stage) == "protect" ||
               c.getMain(stage) == "ensemble") &&
-            c.short != "上升姬芽"
+            (stage.hasIgnitionCard ? c.short != "上升姬芽" : true)
           );
         })
+      )[0];
+    } else if (first == "cost") {
+      res = costScoreFilter(
+        stage,
+        newIndexList(stage).filter((i) => {
+          let c = stage.te[i];
+          return (
+            (c.getMain(stage) == "mental" ||
+              c.getMain(stage) == "protect" ||
+              c.getMain(stage) == "ensemble") &&
+            (stage.hasIgnitionCard ? c.short != "上升姬芽" : true)
+          );
+        }),
+        true
       )[0];
     } else {
       res = costFilter(
@@ -133,7 +169,7 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
             (c.getMain(stage) == "mental" ||
               c.getMain(stage) == "protect" ||
               c.getMain(stage) == "ensemble") &&
-            c.short != "上升姬芽"
+            (stage.hasIgnitionCard ? c.short != "上升姬芽" : true)
           );
         }),
         true
@@ -142,15 +178,17 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
   }
   if (res == undefined) {
     // kol慈
-    index = stage.te.findIndex((c) => c.short == "kol慈");
+    index = stage.te.findIndex((c) => c.short == stage.targetCard0);
     if (
       index >= 0 &&
-      stage.getAllCards().filter((c) => c.member == "jewelry").length <
+      stage.getAllCards().filter((c) => c.short == stage.targetCard1).length <
         jewelryCountTarget &&
       (stage.te[index].getCost(stage.te) == 1 ||
         stage.te[index].getCost(stage.te) <
           (first == "score"
             ? stage.ap - stage.apSpeed
+            : first == "heartMax"
+            ? stage.ap
             : stage.ap - stage.apSpeed * (stage.apMax / 10)))
     ) {
       res = index;
@@ -160,13 +198,13 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
     // jewelry over
     index = stage.te.findIndex(
       (c) =>
-        c.member == "jewelry" &&
+        c.short == stage.targetCard1 &&
         stage.hasCostEffect &&
         c.getCost(stage) <= stage.ap
     );
     if (
       index >= 0 &&
-      stage.getAllCards().filter((c) => c.member == "jewelry").length >
+      stage.getAllCards().filter((c) => c.short == stage.targetCard1).length >
         jewelryCountTarget
     ) {
       res = index;
@@ -182,6 +220,20 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
           scoreFilter(stage, newIndexList(stage))
         )
       )[0];
+    } else if (first == "heartMax") {
+      res = costSubtractFilter(
+        stage,
+        drawFilterReshuffleFilter(
+          stage,
+          costFilter(
+            stage,
+            reshuffleFilter(
+              stage,
+              jewelryFilter(stage, jewelryCountTarget, newIndexList(stage))
+            )
+          )
+        )
+      )[0];
     } else {
       res = costSubtractFilter(
         stage,
@@ -190,7 +242,7 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
           jewelryFilter(
             stage,
             jewelryCountTarget,
-            costFilter(stage, newIndexList(stage))
+            costScoreFilter(stage, newIndexList(stage))
           )
         )
       )[0];
