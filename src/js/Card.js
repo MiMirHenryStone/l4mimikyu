@@ -15,7 +15,7 @@ export default class Card {
       }
 
       this.cost = props.cost;
-      this.ignitionCost = props.ignitionCost;
+      this.ignitionCost = props.ignitionCost ?? props.cost;
       this.costDelta = 0;
       this.teCostDelta = 0;
     }
