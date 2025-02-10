@@ -1,5 +1,7 @@
 import Card from "./Card";
 
+const defaultHeartMax = 100;
+
 export default class Stage {
   constructor(cards) {
     this.score = 0;
@@ -26,7 +28,7 @@ export default class Stage {
     this.ap = 0;
     this.apSpeed = 2.5;
 
-    this.heartMax = 100;
+    this.heartMax = defaultHeartMax;
 
     this.drawHeartCount = 0;
     this.jewelryCountTarget = 0;
@@ -77,7 +79,7 @@ export default class Stage {
 
     this.hasCostEffect = ["st1a"].includes(this.effect);
 
-    if (this.section != 1) this.testAllCards();
+    this.testAllCards();
   }
 
   draw(index) {
@@ -112,7 +114,7 @@ export default class Stage {
   }
 
   autoAp() {
-    this.yData.push(this.strategy == "heartMax" ? this.heartMax : this.score);
+    this.yData.push(this.section == 1 ? this.heartMax : this.score);
     if (this.sp != "kz2") this.addAp(this.apSpeed);
   }
 
@@ -239,17 +241,17 @@ export default class Stage {
 
     if (!extra2) {
       this.autoAp();
-      if (this.section != 1) this.testAllCards();
+      this.testAllCards();
     }
   }
 
   calcTestDrawHeartCount() {
     let n = 0;
     let cards = this.getAllCards();
-    let jewelryCount = cards.filter((c) => c.short == "💎").length;
+    let jewelryCount = cards.filter((c) => c.short == this.targetCard1).length;
     if (jewelryCount < this.jewelryCountTarget) {
       for (let i = 0; i < this.jewelryCountTarget - jewelryCount; i++)
-        cards.push(new Card("💎"));
+        cards.push(new Card(this.targetCard1));
     }
     cards.forEach((c) => {
       n += c.calcDrawHeartCount(this);
@@ -294,12 +296,18 @@ export default class Stage {
 
   testCard(index, drawCard) {
     let short = drawCard ? drawCard.short : this.te[index].short;
-    if (short == "kol慈") return 0.01;
-    if (short == "💎") return 0;
-    if (
-      ["ritm吟", "蓝远梢", "蓝远花帆", "pa吟", "水母吟", "花结吟"].includes(
-        short
-      )
+    if (short == this.targetCard0) return 0.01;
+    else if (short == this.targetCard1) return 0;
+    else if (
+      [
+        "ritm吟",
+        "蓝远梢",
+        "蓝远花帆",
+        "pa吟",
+        "水母吟",
+        "花结吟",
+        "kol慈",
+      ].includes(short)
     )
       return -0.01;
 
@@ -353,7 +361,10 @@ export default class Stage {
 
     testStage.calcTestDrawHeartCount();
 
-    let res = testStage.score;
+    let res =
+      testStage.section == 1
+        ? testStage.heartMax - defaultHeartMax
+        : testStage.score;
     let newLength = testStage.getAllCards().length;
 
     if (isReshuffle) res += testStage.calcNextDrawHeartCount(card);

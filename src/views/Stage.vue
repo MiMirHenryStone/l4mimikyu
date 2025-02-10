@@ -203,7 +203,7 @@
         @click="
           dialogData = {
             key: stage.jewelryCountTarget,
-            score: stage.strategy == 'heartMax' ? stage.heartMax : stage.score,
+            score: stage.section == 1 ? stage.heartMax : stage.score,
             cardTimesDict: stage.cardTimesDict,
             yData: [stage.yData],
           };
@@ -518,9 +518,7 @@ const start = async (a) => {
         }
         if (!ing.value) break;
         score +=
-          stage.value.strategy == "heartMax"
-            ? stage.value.heartMax
-            : stage.value.score;
+          stage.value.section == 1 ? stage.value.heartMax : stage.value.score;
         yData.push(stage.value.yData);
         jewelryCount += stage.value
           .getAllCards()

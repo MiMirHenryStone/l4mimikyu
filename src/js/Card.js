@@ -116,24 +116,31 @@ export default class Card {
   }
 
   calcDrawHeartCount(stage) {
+    let field = stage.section == 1 ? "heartMax" : "heart";
     let n = 0;
     let draw;
     if (this.props?.draw) {
       if (typeof this.props?.draw == "function") draw = this.props?.draw(stage);
       else draw = this.props?.draw;
     }
-    n += draw?.heart?.length || 0;
-    if (stage.sp == "tz") n += draw?.voltage?.length || 0;
-    if (stage.sp == "mg2")
-      n += (draw?.mental?.length || 0) + (draw?.protect?.length || 0);
+    if (field == "heartMax") n += draw?.heartMax || 0;
+    else {
+      n += draw?.heart?.length || 0;
+      if (stage.sp == "tz") n += draw?.voltage?.length || 0;
+      if (stage.sp == "mg2")
+        n += (draw?.mental?.length || 0) + (draw?.protect?.length || 0);
+    }
 
     let m = 0;
     let skill = this.getSkill(stage);
     if (skill?.ap < 0) {
-      m += skill.heart?.length || 0;
-      if (stage.sp == "tz") m += skill?.voltage?.length || 0;
-      if (stage.sp == "mg2")
-        m += (skill?.mental?.length || 0) + (skill?.protect?.length || 0);
+      if (field == "heartMax") m += skill.heartMax || 0;
+      else {
+        m += skill.heart?.length || 0;
+        if (stage.sp == "tz") m += skill?.voltage?.length || 0;
+        if (stage.sp == "mg2")
+          m += (skill?.mental?.length || 0) + (skill?.protect?.length || 0);
+      }
       let turn = stage.getAllCards().length / stage.teMax;
       n += (m * turn) / (turn + stage.scoreCardCount);
     }

@@ -4,10 +4,7 @@ function newIndexList(stage, next) {
     if (
       stage.te[i].getCost(stage.te, stage.ignition) <=
         stage.ap + (next ? stage.apSpeed : 0) &&
-      (stage.strategy == "heartMax"
-        ? !stage.te[i].getSkill(stage)?.cards ||
-          stage.te[i].short == stage.targetCard0
-        : stage.testResults[i] >= 0)
+      stage.testResults[i] >= 0
     )
       indexList.push(i);
   }
@@ -115,18 +112,16 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
       (stage.sp == "mg2" || stage.sp == "tz2" || stage.sp == "kz2"
         ? "score"
         : "cost");
-    if (stage.strategy != "heartMax") {
-      if (stage.ap + stage.apSpeed * (stage.apMax / 10) >= stage.apMax) {
-        first = "score";
-      } else if (
-        stage.te.filter(
-          (c) =>
-            c.getSkill(stage)?.ap < 0 &&
-            c.getCost(stage.te, stage.ignition) <= stage.ap
-        )?.length > 0
-      ) {
-        first = "score";
-      }
+    if (stage.ap + stage.apSpeed * (stage.apMax / 10) >= stage.apMax) {
+      first = "score";
+    } else if (
+      stage.te.filter(
+        (c) =>
+          c.getSkill(stage)?.ap < 0 &&
+          c.getCost(stage.te, stage.ignition) <= stage.ap
+      )?.length > 0
+    ) {
+      first = "score";
     }
   }
 
@@ -190,12 +185,10 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
       index >= 0 &&
       stage.getAllCards().filter((c) => c.short == stage.targetCard1).length <
         jewelryCountTarget &&
-      (stage.te[index].getCost(stage.te, stage.ignition) == 1 ||
+      (stage.te[index].getCost(stage.te, stage.ignition) <= stage.apSpeed ||
         stage.te[index].getCost(stage.te, stage.ignition) <
           (first == "score"
             ? stage.ap - stage.apSpeed
-            : first == "heartMax"
-            ? stage.ap
             : stage.ap - stage.apSpeed * (stage.apMax / 10)))
     ) {
       res = index;
@@ -225,20 +218,6 @@ export function strategyPlay(stage, jewelryCountTarget = 8, first) {
           stage,
           jewelryCountTarget,
           scoreFilter(stage, newIndexList(stage))
-        )
-      )[0];
-    } else if (first == "heartMax") {
-      res = costSubtractFilter(
-        stage,
-        drawFilterReshuffleFilter(
-          stage,
-          costFilter(
-            stage,
-            reshuffleFilter(
-              stage,
-              jewelryFilter(stage, jewelryCountTarget, newIndexList(stage))
-            )
-          )
         )
       )[0];
     } else {
